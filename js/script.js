@@ -2,19 +2,17 @@
 
 //node ids are in order in which nodes come in existence
 var nodes = [
-  { id: 0, label: "a" },
-  { id: 1, label: "b" },
-  { id: 2, label: "c" },
-  { id: 3, label: "d" },
+  { id: 0, label: "0" },
+  { id: 1, label: "1" },
+  { id: 2, label: "2" },
+
 ];
 
 
 var links = [
-  { source: 0, target: 1 },
   { source: 0, target: 2 },
-  { source: 1, target: 3 },
+  { source: 0, target: 1 },
   { source: 1, target: 2 },
-
 ];
 
 var lastNodeId = nodes.length;
@@ -53,15 +51,17 @@ var simulation = d3.forceSimulation()
 
 //update positions of edges and vertices with each internal timer's tick
 function tick() {
-
   edges.attr("x1", function (d) { return d.source.x; })
     .attr("y1", function (d) { return d.source.y; })
     .attr("x2", function (d) { return d.target.x; })
     .attr("y2", function (d) { return d.target.y; });
 
-  vertices.attr("cx", function (d) { return d.x; })
-    .attr("cy", function (d) { return d.y; });
+  // Update the position of the group
+  vertices.attr("transform", function (d) {
+    return "translate(" + d.x + "," + d.y + ")";
+  });
 }
+
 
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
@@ -82,13 +82,16 @@ function restart() {
     })
     .merge(edges);
 
-  //vertices are known by id
+  // vertices are known by id
   vertices = vertices.data(nodes, function (d) { return d.id; });
   vertices.exit().remove();
-  vertices = vertices.enter()
-    .append("circle")
+
+  var enterVertices = vertices.enter()
+    .append("g")
+    .attr("class", "vertex-group");
+
+  enterVertices.append("circle")
     .attr("r", rad)
-    .attr("class", "vertex")
     .style("fill", function (d, i) {
       return colors[d.id % 10];
     })
@@ -101,8 +104,18 @@ function restart() {
           .text("v" + d.id);
       }
     })
-    .on("contextmenu", removeNode)
-    .merge(vertices);
+    .on("contextmenu", removeNode);
+
+  enterVertices.append("text")
+    .text(function (d) { return d.label; }) // Set the text to the label property of the data
+    .attr("text-anchor", "middle")  // Center the text horizontally
+    .attr("dy", ".35em")  // Vertically center the text
+    .style("pointer-events", "none") // Prevents text from capturing mouse events
+    .style("user-select", "none"); // Prevents text selection
+
+
+  vertices = enterVertices.merge(vertices);
+
 
   simulation.nodes(nodes);
   simulation.force("link").links(links);
@@ -125,11 +138,17 @@ svg.on("mousedown", addNode)
 function addNode() {
   if (d3.event.button == 0) {
     var coords = d3.mouse(this);
-    var newNode = { x: coords[0], y: coords[1], id: ++lastNodeId, };
+    var newNode = {
+      id: ++lastNodeId,
+      label: lastNodeId, // Assign a label to the new node
+      x: coords[0],
+      y: coords[1]
+    };
     nodes.push(newNode);
     restart();
   }
 }
+
 
 //d is data, i is index according to selection
 function removeNode(d, i) {
