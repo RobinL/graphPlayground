@@ -29,8 +29,36 @@ var svg = d3.select("#svg-wrap")
   .attr("width", w)
   .attr("height", h);
 
+function print_stringified_links() {
 
+  var stringified_links = links.map(function (link) {
+    return {
+      source: link.source.id,
+      target: link.target.id
+    }
+  })
+  // stringify the links
 
+  var stringified_links = JSON.stringify(stringified_links)
+  // print the links
+  console.log(stringified_links)
+}
+
+function print_stringified_nodes() {
+  // retain only the id label and colorindex
+  var stringified_nodes = nodes.map(function (node) {
+    return {
+      id: node.id,
+      label: node.label,
+      colorIndex: node.colorIndex
+    }
+  })
+  // stringify the nodes
+  var stringified_nodes = JSON.stringify(stringified_nodes)
+  // print the nodes
+  console.log(stringified_nodes)
+
+}
 //the animation line when adding edge b/w two vertices
 var dragLine = svg.append("path")
   .attr("class", "dragLine hidden")
