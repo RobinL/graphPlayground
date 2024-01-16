@@ -2,12 +2,13 @@
 
 //node ids are in order in which nodes come in existence
 var nodes = [
-  { id: 0, label: "0" },
-  { id: 1, label: "1" },
-  { id: 2, label: "2" },
+  { id: 0, label: "hello", colorIndex: 0 },
+  { id: 1, label: "1", colorIndex: 0 },
+  { id: 2, label: "2", colorIndex: 0 },
 
 ];
 
+var colors = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
 
 var links = [
   { source: 0, target: 2 },
@@ -15,7 +16,7 @@ var links = [
   { source: 1, target: 2 },
 ];
 
-var lastNodeId = nodes.length;
+var lastNodeId = nodes.length - 1
 var viewWid = document.documentElement.clientWidth;
 var w = viewWid > 1200 ? 900 : 700;
 var h = w == 900 ? 600 : 500;
@@ -28,8 +29,7 @@ var svg = d3.select("#svg-wrap")
   .attr("width", w)
   .attr("height", h);
 
-//array of colors for nodes
-var colors = d3.schemeCategory10;
+
 
 //the animation line when adding edge b/w two vertices
 var dragLine = svg.append("path")
@@ -104,14 +104,34 @@ function restart() {
           .text("v" + d.id);
       }
     })
-    .on("contextmenu", removeNode);
+    .on("contextmenu", removeNode)
+    .on("click", function (d) {
+      // Increment the color index on click
+      d.colorIndex = (d.colorIndex + 1) % 5;
+      d3.select(this).style("fill", colors[d.colorIndex]);
+      d3.event.stopPropagation(); // Prevent other events like mousedown
+    })
+    .style("fill", function (d, i) {
+      return colors[d.colorIndex % 5];  // Use the colorIndex to determine the color
+    })
 
   enterVertices.append("text")
-    .text(function (d) { return d.label; }) // Set the text to the label property of the data
-    .attr("text-anchor", "middle")  // Center the text horizontally
-    .attr("dy", ".35em")  // Vertically center the text
-    .style("pointer-events", "none") // Prevents text from capturing mouse events
-    .style("user-select", "none"); // Prevents text selection
+    .text(function (d) { return d.label; })
+    .attr("text-anchor", "middle")
+    .attr("dy", ".35em")
+    .style("pointer-events", "none")
+    .style("user-select", "none")
+    .style("stroke", "white")
+    .style("stroke-width", "2px")
+
+  enterVertices.append("text")
+    .text(function (d) { return d.label; })
+    .attr("text-anchor", "middle")
+    .attr("dy", ".35em")
+    .style("pointer-events", "none")
+    .style("user-select", "none")
+    .style("fill", "black")
+
 
 
   vertices = enterVertices.merge(vertices);
@@ -141,6 +161,7 @@ function addNode() {
     var newNode = {
       id: ++lastNodeId,
       label: lastNodeId, // Assign a label to the new node
+      colorIndex: 0,
       x: coords[0],
       y: coords[1]
     };
