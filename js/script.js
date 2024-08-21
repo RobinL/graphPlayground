@@ -2,9 +2,10 @@
 
 //node ids are in order in which nodes come in existence
 var nodes = [
-  { id: 0, label: "hello", colorIndex: 0 },
-  { id: 1, label: "1", colorIndex: 0 },
-  { id: 2, label: "2", colorIndex: 0 },
+  { id: 0, label: "A", colorIndex: 0 },
+  { id: 1, label: "B", colorIndex: 0 },
+  { id: 2, label: "C", colorIndex: 0 },
+
 
 ];
 
@@ -14,9 +15,10 @@ var links = [
   { source: 0, target: 2 },
   { source: 0, target: 1 },
   { source: 1, target: 2 },
+
 ];
 
-var lastNodeId = nodes.length - 1
+var lastNodeId = nodes.length
 var viewWid = document.documentElement.clientWidth;
 var w = viewWid > 1200 ? 900 : 700;
 var h = w == 900 ? 600 : 500;
@@ -108,7 +110,15 @@ function restart() {
           .text("v" + d.source.id + "-v" + d.target.id);
       }
     })
-    .merge(edges);
+    .on("click", function (d) {
+      // Cycle through colors on click
+      var currentColor = d3.select(this).style("stroke");
+      var colors = ["grey", "green", "orange", "red"];
+      var nextColor = colors[(colors.indexOf(currentColor) + 1) % colors.length];
+      d3.select(this).style("stroke", nextColor);
+    })
+    .merge(edges)
+    .style("stroke", "grey");  // Set the default color to grey
 
   // vertices are known by id
   vertices = vertices.data(nodes, function (d) { return d.id; });
@@ -141,7 +151,7 @@ function restart() {
     })
     .style("fill", function (d, i) {
       return colors[d.colorIndex % 5];  // Use the colorIndex to determine the color
-    })
+    });
 
   enterVertices.append("text")
     .text(function (d) { return d.label; })
@@ -150,7 +160,7 @@ function restart() {
     .style("pointer-events", "none")
     .style("user-select", "none")
     .style("stroke", "white")
-    .style("stroke-width", "2px")
+    .style("stroke-width", "2px");
 
   enterVertices.append("text")
     .text(function (d) { return d.label; })
@@ -158,17 +168,15 @@ function restart() {
     .attr("dy", ".35em")
     .style("pointer-events", "none")
     .style("user-select", "none")
-    .style("fill", "black")
-
-
+    .style("fill", "black");
 
   vertices = enterVertices.merge(vertices);
-
 
   simulation.nodes(nodes);
   simulation.force("link").links(links);
   simulation.alpha(0.8).restart();
 }
+
 
 restart();
 
@@ -186,9 +194,14 @@ svg.on("mousedown", addNode)
 function addNode() {
   if (d3.event.button == 0) {
     var coords = d3.mouse(this);
+
+    // Calculate the alphabetic label based on lastNodeId
+    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    var label = alphabet[lastNodeId % 26];  // Cycles through A-Z
+
     var newNode = {
       id: ++lastNodeId,
-      label: lastNodeId, // Assign a label to the new node
+      label: label,  // Assign the alphabetic label to the new node
       colorIndex: 0,
       x: coords[0],
       y: coords[1]
