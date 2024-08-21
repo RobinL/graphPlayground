@@ -293,23 +293,29 @@ d3.select(window)
   .on('keyup', keyup);
 
 function keydown() {
-  // Only prevent the default action if the key is "Control"
-  if (d3.event.key === "Control") {
-    d3.event.preventDefault();
-    if (lastKeyDown !== -1) return;
+  // Use Meta key (Command key on Mac)
+  if (d3.event.key === "Meta") {
+
+    console.log("keydown")
+
     lastKeyDown = d3.event.key;
 
-    vertices.call(d3.drag()
+    vertices_groups = d3.selectAll(".vertex-group");
+
+    vertices_groups.call(d3.drag()
       .on("start", function dragstarted(d) {
+        console.log("drag start");
         if (!d3.event.active) simulation.alphaTarget(1).restart();
         d.fx = d.x;
         d.fy = d.y;
       })
       .on("drag", function (d) {
+        console.log("dragging");
         d.fx = d3.event.x;
         d.fy = d3.event.y;
       })
       .on("end", function (d) {
+        console.log("drag end");
         if (!d3.event.active) simulation.alphaTarget(0);
         d.fx = null;
         d.fy = null;
@@ -317,12 +323,10 @@ function keydown() {
   }
 }
 
-
 function keyup() {
-  // Reset lastKeyDown only if "Control" was released
-  if (d3.event.key === "Control") {
+  // Reset lastKeyDown only if "Meta" (Command) was released
+  if (d3.event.key === "Meta") {
     lastKeyDown = -1;
     vertices.on("mousedown.drag", null);
   }
 }
-
