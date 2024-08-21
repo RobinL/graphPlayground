@@ -12,10 +12,9 @@ var nodes = [
 var colors = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
 
 var links = [
-  { source: 0, target: 2 },
-  { source: 0, target: 1 },
-  { source: 1, target: 2 },
-
+  { source: 0, target: 2, edgeColorIndex: 0 },
+  { source: 0, target: 1, edgeColorIndex: 0 },
+  { source: 1, target: 2, edgeColorIndex: 0 },
 ];
 
 var lastNodeId = nodes.length
@@ -96,32 +95,25 @@ function tick() {
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
 function restart() {
-  edges = edges.data(links, function (d) { return "v" + d.source.id + "-v" + d.target.id; });
+  edges = edges.data(links, d => `v${d.source.id}-v${d.target.id}`);
   edges.exit().remove();
   edges = edges.enter()
     .append("line")
     .attr("class", "edge")
-    .on("mousedown", function () { d3.event.stopPropagation(); })
+    .on("mousedown", () => d3.event.stopPropagation())
     .on("contextmenu", removeEdge)
-    .on("mouseover", function (d) {
-      var thisEdge = d3.select(this);
-      if (thisEdge.select("title").empty()) {
-        thisEdge.append("title")
-          .text("v" + d.source.id + "-v" + d.target.id);
-      }
-    })
     .on("click", function (d) {
-      // Cycle through colors on click
-      var currentColor = d3.select(this).style("stroke");
-      var colors = ["grey", "green", "orange", "red"];
-      var nextColor = colors[(colors.indexOf(currentColor) + 1) % colors.length];
-      d3.select(this).style("stroke", nextColor);
+      var colors = ["green", "grey", "orange", "red",];
+      d.edgeColorIndex = (d.edgeColorIndex + 1) % colors.length;
+      d3.select(this)
+        .style("stroke", colors[d.edgeColorIndex])
+        .style("stroke-dasharray", colors[d.edgeColorIndex] === "grey" ? "5,5" : "");  // Apply dotted line if grey
     })
     .merge(edges)
-    .style("stroke", "grey");  // Set the default color to grey
+    .style("stroke", d => ["green", "grey", "orange", "red",][d.edgeColorIndex])
+    .style("stroke-dasharray", d => d.edgeColorIndex === 1 ? "5,5" : "");  // Apply dotted line if grey
 
-  // vertices are known by id
-  vertices = vertices.data(nodes, function (d) { return d.id; });
+  vertices = vertices.data(nodes, d => d.id);
   vertices.exit().remove();
 
   var enterVertices = vertices.enter()
@@ -130,31 +122,18 @@ function restart() {
 
   enterVertices.append("circle")
     .attr("r", rad)
-    .style("fill", function (d, i) {
-      return colors[d.id % 10];
-    })
+    .style("fill", d => colors[d.colorIndex % 5])
     .on("mousedown", beginDragLine)
     .on("mouseup", endDragLine)
-    .on("mouseover", function (d) {
-      var thisVertex = d3.select(this);
-      if (thisVertex.select("title").empty()) {
-        thisVertex.append("title")
-          .text("v" + d.id);
-      }
-    })
     .on("contextmenu", removeNode)
     .on("click", function (d) {
-      // Increment the color index on click
       d.colorIndex = (d.colorIndex + 1) % 5;
       d3.select(this).style("fill", colors[d.colorIndex]);
-      d3.event.stopPropagation(); // Prevent other events like mousedown
-    })
-    .style("fill", function (d, i) {
-      return colors[d.colorIndex % 5];  // Use the colorIndex to determine the color
+      d3.event.stopPropagation();
     });
 
   enterVertices.append("text")
-    .text(function (d) { return d.label; })
+    .text(d => d.label)
     .attr("text-anchor", "middle")
     .attr("dy", ".35em")
     .style("pointer-events", "none")
@@ -163,7 +142,7 @@ function restart() {
     .style("stroke-width", "2px");
 
   enterVertices.append("text")
-    .text(function (d) { return d.label; })
+    .text(d => d.label)
     .attr("text-anchor", "middle")
     .attr("dy", ".35em")
     .style("pointer-events", "none")
@@ -272,16 +251,26 @@ function updateDragLine() {
 //mouseup on vertices propagates to svg which calls hideDragLine
 function endDragLine(d) {
   if (!mousedownNode || mousedownNode === d) return;
-  //return if link already exists
+
+  // Return if link already exists
   for (var i = 0; i < links.length; i++) {
     var l = links[i];
     if ((l.source === mousedownNode && l.target === d) || (l.source === d && l.target === mousedownNode)) {
       return;
     }
   }
-  var newLink = { source: mousedownNode, target: d };
+
+  // Create new link with edgeColorIndex
+  var newLink = {
+    source: mousedownNode,
+    target: d,
+    edgeColorIndex: 0 // Initialize edgeColorIndex to 0 (which corresponds to "grey")
+  };
+
   links.push(newLink);
+  restart();
 }
+
 
 //clearAll button
 d3.select("#clear")
@@ -304,11 +293,12 @@ d3.select(window)
   .on('keyup', keyup);
 
 function keydown() {
-  d3.event.preventDefault();
-  if (lastKeyDown !== -1) return;
-  lastKeyDown = d3.event.key;
+  // Only prevent the default action if the key is "Control"
+  if (d3.event.key === "Control") {
+    d3.event.preventDefault();
+    if (lastKeyDown !== -1) return;
+    lastKeyDown = d3.event.key;
 
-  if (lastKeyDown === "Control") {
     vertices.call(d3.drag()
       .on("start", function dragstarted(d) {
         if (!d3.event.active) simulation.alphaTarget(1).restart();
@@ -327,9 +317,12 @@ function keydown() {
   }
 }
 
+
 function keyup() {
-  lastKeyDown = -1;
+  // Reset lastKeyDown only if "Control" was released
   if (d3.event.key === "Control") {
+    lastKeyDown = -1;
     vertices.on("mousedown.drag", null);
   }
 }
+
