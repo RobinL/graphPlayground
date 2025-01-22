@@ -30,6 +30,16 @@ var svg = d3.select("#svg-wrap")
   .attr("width", w)
   .attr("height", h);
 
+// Add these variables near the top of the file with other state variables
+var isDraggingProb = false;
+var dragStartY;
+var dragStartProb;
+
+// Add this color scale near the top with other variables
+var probColorScale = d3.scaleLinear()
+  .domain([0, 0.5, 1])
+  .range(["red", "orange", "green"]);
+
 function print_stringified_links() {
 
   var stringified_links = links.map(function (link) {
@@ -112,12 +122,12 @@ function restart() {
     .attr("class", "edge")
     .on("mousedown", () => d3.event.stopPropagation())
     .on("contextmenu", removeEdge)
-    .on("click", function (d) {
-      var colors = ["green", "grey", "orange", "red"];
-      d.edgeColorIndex = (d.edgeColorIndex + 1) % colors.length;
-      d3.select(this)
-        .style("stroke", colors[d.edgeColorIndex])
-        .style("stroke-dasharray", colors[d.edgeColorIndex] === "grey" ? "5,5" : "");
+    .on("mousedown.prob", function (d) {
+      isDraggingProb = true;
+      dragStartY = d3.event.y;
+      dragStartProb = d.probability;
+      d3.select(this).classed("active", true);
+      d3.event.stopPropagation();
     });
 
   // Add the probability text to the edge group
@@ -136,24 +146,14 @@ function restart() {
 
   // Update all lines
   edges.select("line")
-    .style("stroke", d => ["green", "grey", "orange", "red"][d.edgeColorIndex])
-    .style("stroke-dasharray", d => d.edgeColorIndex === 1 ? "5,5" : "");
+    .style("stroke", d => probColorScale(d.probability))
+    .style("stroke-dasharray", "none");
 
   // Update all probability texts
   edges.select("text")
-    .text(d => d.probability.toFixed(1))
-    .style("fill", d => ["green", "grey", "orange", "red"][d.edgeColorIndex])
-    .style("font-size", "10px")
-    .on("click", function (d) {
-      let newProb = prompt("Enter new probability (0-1):", d.probability);
-      if (newProb !== null) {
-        newProb = parseFloat(newProb);
-        if (!isNaN(newProb) && newProb >= 0 && newProb <= 1) {
-          d.probability = newProb;
-          d3.select(this).text(newProb.toFixed(1));
-        }
-      }
-    });
+    .text(d => d.probability.toFixed(2))  // Show 2 decimal places
+    .style("fill", d => probColorScale(d.probability))
+    .style("font-size", "10px");
 
   vertices = vertices.data(nodes, d => d.id);
   vertices.exit().remove();
@@ -210,7 +210,36 @@ svg.on("mousedown", addNode)
   .on("mousemove", updateDragLine)
   .on("mouseup", hideDragLine)
   .on("contextmenu", function () { d3.event.preventDefault(); })
-  .on("mouseleave", hideDragLine);
+  .on("mouseleave", hideDragLine)
+  .on("mousemove.prob", function () {
+    if (isDraggingProb) {
+      let dy = d3.event.y - dragStartY;
+      // Increase sensitivity and precision
+      let probChange = -dy * 0.001;  // Reduced from 0.005 to 0.001 for finer control
+
+      edges.selectAll("line.active").each(function (d) {
+        // Update probability, keeping it between 0 and 1
+        d.probability = Math.min(1, Math.max(0, Math.round((dragStartProb + probChange) * 100) / 100));
+        // Update the text and color
+        let parentGroup = d3.select(this.parentNode);
+        parentGroup.select("text")
+          .text(d.probability.toFixed(2));
+        // Update colors
+        d3.select(this).style("stroke", probColorScale(d.probability));
+        parentGroup.select("text").style("fill", probColorScale(d.probability));
+      });
+    }
+  })
+  .on("mouseup.prob", function () {
+    isDraggingProb = false;
+    edges.selectAll("line").classed("active", false);
+  })
+  .on("mouseleave.prob", function () {
+    if (isDraggingProb) {
+      isDraggingProb = false;
+      edges.selectAll("line").classed("active", false);
+    }
+  });
 
 function addNode() {
   if (d3.event.button == 0) {
@@ -306,7 +335,6 @@ function endDragLine(d) {
   var newLink = {
     source: mousedownNode,
     target: d,
-    edgeColorIndex: 0,
     probability: 0.9  // Default probability
   };
 
@@ -373,3 +401,35 @@ function keyup() {
     vertices.on("mousedown.drag", null);
   }
 }
+
+// Add this function after the other print functions
+function dumpGraphData() {
+  // Format nodes
+  const formattedNodes = nodes.map(node => ({
+    unique_id: node.label,
+    source_dataset: node.colorIndex
+  }));
+
+  // Format links
+  const formattedLinks = links.map(link => ({
+    unique_id_l: link.source.label,
+    source_dataset_l: link.source.colorIndex,
+    unique_id_r: link.target.label,
+    source_dataset_r: link.target.colorIndex,
+    probability: link.probability
+  }));
+
+  const graphData = {
+    nodes: formattedNodes,
+    links: formattedLinks
+  };
+
+  console.log(JSON.stringify(graphData, null, 2));
+}
+
+// Add button handler after other button handlers
+d3.select("#container")
+  .append("button")
+  .attr("id", "dump-data")
+  .text("Dump Graph Data")
+  .on("click", dumpGraphData);

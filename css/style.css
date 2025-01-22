@@ -81,10 +81,14 @@ svg {
 
 .edge {
   stroke: #888;
-  stroke-width:2px;
+  stroke-width: 2px;
   stroke-linecap: round;
   stroke-linejoin: round;
-  cursor: default;
+  cursor: ns-resize;
+}
+
+.edge.active {
+  stroke-width: 3px;
 }
 
 .edge:hover, .dragLine {
