@@ -429,7 +429,7 @@ function dumpGraphData() {
     source_dataset_l: link.source.sourceDataset,
     unique_id_r: link.target.label,
     source_dataset_r: link.target.sourceDataset,
-    probability: link.probability
+    match_probability: link.probability
   }));
 
   const graphData = {
