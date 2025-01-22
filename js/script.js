@@ -12,9 +12,9 @@ var nodes = [
 var colors = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
 
 var links = [
-  { source: 0, target: 2, edgeColorIndex: 0 },
-  { source: 0, target: 1, edgeColorIndex: 0 },
-  { source: 1, target: 2, edgeColorIndex: 0 },
+  { source: 0, target: 2, edgeColorIndex: 0, probability: 0.9 },
+  { source: 0, target: 1, edgeColorIndex: 0, probability: 0.9 },
+  { source: 1, target: 2, edgeColorIndex: 0, probability: 0.9 },
 ];
 
 var lastNodeId = nodes.length
@@ -29,6 +29,16 @@ var svg = d3.select("#svg-wrap")
   .append("svg")
   .attr("width", w)
   .attr("height", h);
+
+// Add these variables near the top of the file with other state variables
+var isDraggingProb = false;
+var dragStartY;
+var dragStartProb;
+
+// Add this color scale near the top with other variables
+var probColorScale = d3.scaleLinear()
+  .domain([0, 0.5, 1])
+  .range(["red", "orange", "green"]);
 
 function print_stringified_links() {
 
@@ -80,12 +90,16 @@ var simulation = d3.forceSimulation()
 
 //update positions of edges and vertices with each internal timer's tick
 function tick() {
-  edges.attr("x1", function (d) { return d.source.x; })
-    .attr("y1", function (d) { return d.source.y; })
-    .attr("x2", function (d) { return d.target.x; })
-    .attr("y2", function (d) { return d.target.y; });
+  edges.select("line")
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
 
-  // Update the position of the group
+  edges.select("text")
+    .attr("x", d => (d.source.x + d.target.x) / 2)
+    .attr("y", d => (d.source.y + d.target.y) / 2 - 5);
+
   vertices.attr("transform", function (d) {
     return "translate(" + d.x + "," + d.y + ")";
   });
@@ -97,21 +111,49 @@ function tick() {
 function restart() {
   edges = edges.data(links, d => `v${d.source.id}-v${d.target.id}`);
   edges.exit().remove();
-  edges = edges.enter()
-    .append("line")
+
+  // Create a group for each edge to hold both the line and the text
+  var edgeGroups = edges.enter()
+    .append("g")
+    .attr("class", "edge-group");
+
+  // Add the line to the edge group
+  edgeGroups.append("line")
     .attr("class", "edge")
     .on("mousedown", () => d3.event.stopPropagation())
     .on("contextmenu", removeEdge)
+    .on("mousedown.prob", function (d) {
+      isDraggingProb = true;
+      dragStartY = d3.event.y;
+      dragStartProb = d.probability;
+      d3.select(this).classed("active", true);
+      d3.event.stopPropagation();
+    });
+
+  // Add the probability text to the edge group
+  edgeGroups.append("text")
+    .attr("class", "edge-text")
+    .attr("text-anchor", "middle")
+    .style("pointer-events", "none")
+    .style("user-select", "none")
     .on("click", function (d) {
-      var colors = ["green", "grey", "orange", "red",];
-      d.edgeColorIndex = (d.edgeColorIndex + 1) % colors.length;
-      d3.select(this)
-        .style("stroke", colors[d.edgeColorIndex])
-        .style("stroke-dasharray", colors[d.edgeColorIndex] === "grey" ? "5,5" : "");  // Apply dotted line if grey
-    })
-    .merge(edges)
-    .style("stroke", d => ["green", "grey", "orange", "red",][d.edgeColorIndex])
-    .style("stroke-dasharray", d => d.edgeColorIndex === 1 ? "5,5" : "");  // Apply dotted line if grey
+      // Prevent click from propagating to other elements
+      d3.event.stopPropagation();
+    });
+
+  // Merge the groups
+  edges = edgeGroups.merge(edges);
+
+  // Update all lines
+  edges.select("line")
+    .style("stroke", d => probColorScale(d.probability))
+    .style("stroke-dasharray", "none");
+
+  // Update all probability texts
+  edges.select("text")
+    .text(d => d.probability.toFixed(2))  // Show 2 decimal places
+    .style("fill", d => probColorScale(d.probability))
+    .style("font-size", "10px");
 
   vertices = vertices.data(nodes, d => d.id);
   vertices.exit().remove();
@@ -168,7 +210,36 @@ svg.on("mousedown", addNode)
   .on("mousemove", updateDragLine)
   .on("mouseup", hideDragLine)
   .on("contextmenu", function () { d3.event.preventDefault(); })
-  .on("mouseleave", hideDragLine);
+  .on("mouseleave", hideDragLine)
+  .on("mousemove.prob", function () {
+    if (isDraggingProb) {
+      let dy = d3.event.y - dragStartY;
+      // Increase sensitivity and precision
+      let probChange = -dy * 0.001;  // Reduced from 0.005 to 0.001 for finer control
+
+      edges.selectAll("line.active").each(function (d) {
+        // Update probability, keeping it between 0 and 1
+        d.probability = Math.min(1, Math.max(0, Math.round((dragStartProb + probChange) * 100) / 100));
+        // Update the text and color
+        let parentGroup = d3.select(this.parentNode);
+        parentGroup.select("text")
+          .text(d.probability.toFixed(2));
+        // Update colors
+        d3.select(this).style("stroke", probColorScale(d.probability));
+        parentGroup.select("text").style("fill", probColorScale(d.probability));
+      });
+    }
+  })
+  .on("mouseup.prob", function () {
+    isDraggingProb = false;
+    edges.selectAll("line").classed("active", false);
+  })
+  .on("mouseleave.prob", function () {
+    if (isDraggingProb) {
+      isDraggingProb = false;
+      edges.selectAll("line").classed("active", false);
+    }
+  });
 
 function addNode() {
   if (d3.event.button == 0) {
@@ -260,11 +331,11 @@ function endDragLine(d) {
     }
   }
 
-  // Create new link with edgeColorIndex
+  // Create new link with probability
   var newLink = {
     source: mousedownNode,
     target: d,
-    edgeColorIndex: 0 // Initialize edgeColorIndex to 0 (which corresponds to "grey")
+    probability: 0.9  // Default probability
   };
 
   links.push(newLink);
@@ -330,3 +401,115 @@ function keyup() {
     vertices.on("mousedown.drag", null);
   }
 }
+
+// Add this function after the other print functions
+function dumpGraphData() {
+  // Format nodes
+  const formattedNodes = nodes.map(node => ({
+    unique_id: node.label,
+    source_dataset: node.colorIndex
+  }));
+
+  // Format links
+  const formattedLinks = links.map(link => ({
+    unique_id_l: link.source.label,
+    source_dataset_l: link.source.colorIndex,
+    unique_id_r: link.target.label,
+    source_dataset_r: link.target.colorIndex,
+    probability: link.probability
+  }));
+
+  const graphData = {
+    nodes: formattedNodes,
+    links: formattedLinks
+  };
+
+  console.log(JSON.stringify(graphData, null, 2));
+}
+
+// Add button handler after other button handlers
+d3.select("#container")
+  .append("button")
+  .attr("id", "dump-data")
+  .text("Dump Graph Data")
+  .on("click", dumpGraphData);
+
+function generatePythonCode() {
+  // Format nodes
+  const formattedNodes = nodes.map(node => ({
+    unique_id: node.label,
+    source_dataset: node.colorIndex
+  }));
+
+  // Format links
+  const formattedLinks = links.map(link => ({
+    unique_id_l: link.source.label,
+    source_dataset_l: link.source.colorIndex,
+    unique_id_r: link.target.label,
+    source_dataset_r: link.target.colorIndex,
+    probability: link.probability
+  }));
+
+  const graphData = {
+    nodes: formattedNodes,
+    links: formattedLinks
+  };
+
+  return `import pandas as pd
+import json
+
+graph_data = ${JSON.stringify(graphData, null, 2)}
+
+nodes_df = pd.DataFrame(graph_data["nodes"])
+links_df = pd.DataFrame(graph_data["links"])
+
+`;
+}
+
+// Remove the old button and add textarea + copy button
+d3.select("#dump-data").remove();
+
+const controlsDiv = d3.select("#container")
+  .append("div")
+  .style("margin-top", "20px")
+  .style("position", "relative");  // Add relative positioning
+
+controlsDiv.append("button")
+  .text("Copy to Clipboard")
+  .style("position", "absolute")  // Position button absolutely
+  .style("top", "0")
+  .style("right", "0")
+  .style("z-index", "1")  // Ensure button stays on top
+  .on("click", function () {
+    textarea.node().select();
+    document.execCommand('copy');
+    const originalText = this.textContent;
+    this.textContent = "Copied!";
+    setTimeout(() => {
+      this.textContent = originalText;
+    }, 1500);
+  });
+
+const textarea = controlsDiv.append("textarea")
+  .attr("id", "graph-data")
+  .attr("rows", "30")  // Double the height
+  .attr("cols", "80")
+  .style("font-family", "monospace")
+  .style("width", "100%")  // Make textarea fill container
+  .style("margin-top", "30px");  // Add space for button at top
+
+// Function to update textarea
+function updateTextarea() {
+  textarea.text(generatePythonCode());
+}
+
+// Update textarea whenever graph changes
+// Add this to the restart() function
+const originalRestart = restart;
+restart = function () {
+  originalRestart();
+  updateTextarea();
+};
+
+// Initial update
+updateTextarea();
