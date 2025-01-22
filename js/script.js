@@ -2,9 +2,9 @@
 
 //node ids are in order in which nodes come in existence
 var nodes = [
-  { id: 0, label: "1", colorIndex: 0 },
-  { id: 1, label: "2", colorIndex: 0 },
-  { id: 2, label: "3", colorIndex: 0 },
+  { id: 0, label: "1", colorIndex: 0, sourceDataset: 'a' },
+  { id: 1, label: "2", colorIndex: 0, sourceDataset: 'a' },
+  { id: 2, label: "3", colorIndex: 0, sourceDataset: 'a' },
 ];
 
 var colors = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
@@ -32,6 +32,7 @@ var svg = d3.select("#svg-wrap")
 var isDraggingProb = false;
 var dragStartY;
 var dragStartProb;
+var showSourceDataset = false;
 
 // Add this color scale near the top with other variables
 var probColorScale = d3.scaleLinear()
@@ -168,13 +169,16 @@ function restart() {
     .on("contextmenu", removeNode)
     .on("click", function (d) {
       d.colorIndex = (d.colorIndex + 1) % 5;
+      d.sourceDataset = String.fromCharCode(97 + d.colorIndex);
       d3.select(this).style("fill", colors[d.colorIndex]);
+      // Update the labels immediately
+      d3.select(this.parentNode).selectAll("text")
+        .text(showSourceDataset ? d.sourceDataset + d.label : d.label);
       updateTextarea();
       d3.event.stopPropagation();
     });
 
   enterVertices.append("text")
-    .text(d => d.label)
     .attr("text-anchor", "middle")
     .attr("dy", ".35em")
     .style("pointer-events", "none")
@@ -183,7 +187,6 @@ function restart() {
     .style("stroke-width", "2px");
 
   enterVertices.append("text")
-    .text(d => d.label)
     .attr("text-anchor", "middle")
     .attr("dy", ".35em")
     .style("pointer-events", "none")
@@ -191,6 +194,10 @@ function restart() {
     .style("fill", "black");
 
   vertices = enterVertices.merge(vertices);
+
+  // Update all vertex labels
+  vertices.selectAll("text")
+    .text(d => showSourceDataset ? d.sourceDataset + d.label : d.label);
 
   simulation.nodes(nodes);
   simulation.force("link").links(links);
@@ -243,14 +250,14 @@ svg.on("mousedown", addNode)
 function addNode() {
   if (d3.event.button == 0) {
     var coords = d3.mouse(this);
-
-    // Use numeric labels instead of alphabetic
     var label = (lastNodeId + 1).toString();
+    var sourceDataset = String.fromCharCode(97); // 'a' for default colorIndex 0
 
     var newNode = {
       id: ++lastNodeId,
-      label: label,  // Numeric label
+      label: label,
       colorIndex: 0,
+      sourceDataset: sourceDataset,
       x: coords[0],
       y: coords[1]
     };
@@ -341,12 +348,20 @@ function endDragLine(d) {
 }
 
 
-//clearAll button
+// Keep just the clear button handler
 d3.select("#clear")
   .on('click', function () {
     nodes.splice(0);
     links.splice(0);
     lastNodeId = 0;
+    restart();
+  });
+
+// Add near the other button handlers
+d3.select("#toggle-labels")
+  .on("click", function () {
+    showSourceDataset = !showSourceDataset;
+    this.textContent = showSourceDataset ? "Hide Source Dataset" : "Show Source Dataset";
     restart();
   });
 
@@ -402,21 +417,18 @@ function keyup() {
 
 // Add this function after the other print functions
 function dumpGraphData() {
-  // Helper function to convert number to letter (0 -> 'a', 1 -> 'b', etc.)
-  const numberToLetter = (num) => String.fromCharCode(97 + num); // 97 is ASCII for 'a'
-
   // Format nodes
   const formattedNodes = nodes.map(node => ({
     unique_id: node.label,
-    source_dataset: numberToLetter(node.colorIndex)
+    source_dataset: node.sourceDataset
   }));
 
   // Format links
   const formattedLinks = links.map(link => ({
     unique_id_l: link.source.label,
-    source_dataset_l: numberToLetter(link.source.colorIndex),
+    source_dataset_l: link.source.sourceDataset,
     unique_id_r: link.target.label,
-    source_dataset_r: numberToLetter(link.target.colorIndex),
+    source_dataset_r: link.target.sourceDataset,
     probability: link.probability
   }));
 
@@ -442,15 +454,15 @@ function generatePythonCode() {
   // Format nodes
   const formattedNodes = nodes.map(node => ({
     unique_id: node.label,
-    source_dataset: numberToLetter(node.colorIndex)
+    source_dataset: node.sourceDataset
   }));
 
   // Format links
   const formattedLinks = links.map(link => ({
     unique_id_l: link.source.label,
-    source_dataset_l: numberToLetter(link.source.colorIndex),
+    source_dataset_l: link.source.sourceDataset,
     unique_id_r: link.target.label,
-    source_dataset_r: numberToLetter(link.target.colorIndex),
+    source_dataset_r: link.target.sourceDataset,
     probability: link.probability
   }));
 
