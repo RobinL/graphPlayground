@@ -433,3 +433,83 @@ d3.select("#container")
   .attr("id", "dump-data")
   .text("Dump Graph Data")
   .on("click", dumpGraphData);
+
+function generatePythonCode() {
+  // Format nodes
+  const formattedNodes = nodes.map(node => ({
+    unique_id: node.label,
+    source_dataset: node.colorIndex
+  }));
+
+  // Format links
+  const formattedLinks = links.map(link => ({
+    unique_id_l: link.source.label,
+    source_dataset_l: link.source.colorIndex,
+    unique_id_r: link.target.label,
+    source_dataset_r: link.target.colorIndex,
+    probability: link.probability
+  }));
+
+  const graphData = {
+    nodes: formattedNodes,
+    links: formattedLinks
+  };
+
+  return `import pandas as pd
+import json
+
+graph_data = ${JSON.stringify(graphData, null, 2)}
+
+nodes_df = pd.DataFrame(graph_data["nodes"])
+links_df = pd.DataFrame(graph_data["links"])
+
+`;
+}
+
+// Remove the old button and add textarea + copy button
+d3.select("#dump-data").remove();
+
+const controlsDiv = d3.select("#container")
+  .append("div")
+  .style("margin-top", "20px")
+  .style("position", "relative");  // Add relative positioning
+
+controlsDiv.append("button")
+  .text("Copy to Clipboard")
+  .style("position", "absolute")  // Position button absolutely
+  .style("top", "0")
+  .style("right", "0")
+  .style("z-index", "1")  // Ensure button stays on top
+  .on("click", function () {
+    textarea.node().select();
+    document.execCommand('copy');
+    const originalText = this.textContent;
+    this.textContent = "Copied!";
+    setTimeout(() => {
+      this.textContent = originalText;
+    }, 1500);
+  });
+
+const textarea = controlsDiv.append("textarea")
+  .attr("id", "graph-data")
+  .attr("rows", "30")  // Double the height
+  .attr("cols", "80")
+  .style("font-family", "monospace")
+  .style("width", "100%")  // Make textarea fill container
+  .style("margin-top", "30px");  // Add space for button at top
+
+// Function to update textarea
+function updateTextarea() {
+  textarea.text(generatePythonCode());
+}
+
+// Update textarea whenever graph changes
+// Add this to the restart() function
+const originalRestart = restart;
+restart = function () {
+  originalRestart();
+  updateTextarea();
+};
+
+// Initial update
+updateTextarea();
