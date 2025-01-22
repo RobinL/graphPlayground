@@ -2,11 +2,9 @@
 
 //node ids are in order in which nodes come in existence
 var nodes = [
-  { id: 0, label: "A", colorIndex: 0 },
-  { id: 1, label: "B", colorIndex: 0 },
-  { id: 2, label: "C", colorIndex: 0 },
-
-
+  { id: 0, label: "1", colorIndex: 0 },
+  { id: 1, label: "2", colorIndex: 0 },
+  { id: 2, label: "3", colorIndex: 0 },
 ];
 
 var colors = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
@@ -246,13 +244,12 @@ function addNode() {
   if (d3.event.button == 0) {
     var coords = d3.mouse(this);
 
-    // Calculate the alphabetic label based on lastNodeId
-    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    var label = alphabet[lastNodeId % 26];  // Cycles through A-Z
+    // Use numeric labels instead of alphabetic
+    var label = (lastNodeId + 1).toString();
 
     var newNode = {
       id: ++lastNodeId,
-      label: label,  // Assign the alphabetic label to the new node
+      label: label,  // Numeric label
       colorIndex: 0,
       x: coords[0],
       y: coords[1]
@@ -405,18 +402,21 @@ function keyup() {
 
 // Add this function after the other print functions
 function dumpGraphData() {
+  // Helper function to convert number to letter (0 -> 'a', 1 -> 'b', etc.)
+  const numberToLetter = (num) => String.fromCharCode(97 + num); // 97 is ASCII for 'a'
+
   // Format nodes
   const formattedNodes = nodes.map(node => ({
     unique_id: node.label,
-    source_dataset: node.colorIndex
+    source_dataset: numberToLetter(node.colorIndex)
   }));
 
   // Format links
   const formattedLinks = links.map(link => ({
     unique_id_l: link.source.label,
-    source_dataset_l: link.source.colorIndex,
+    source_dataset_l: numberToLetter(link.source.colorIndex),
     unique_id_r: link.target.label,
-    source_dataset_r: link.target.colorIndex,
+    source_dataset_r: numberToLetter(link.target.colorIndex),
     probability: link.probability
   }));
 
@@ -436,18 +436,21 @@ d3.select("#container")
   .on("click", dumpGraphData);
 
 function generatePythonCode() {
+  // Helper function to convert number to letter
+  const numberToLetter = (num) => String.fromCharCode(97 + num);
+
   // Format nodes
   const formattedNodes = nodes.map(node => ({
     unique_id: node.label,
-    source_dataset: node.colorIndex
+    source_dataset: numberToLetter(node.colorIndex)
   }));
 
   // Format links
   const formattedLinks = links.map(link => ({
     unique_id_l: link.source.label,
-    source_dataset_l: link.source.colorIndex,
+    source_dataset_l: numberToLetter(link.source.colorIndex),
     unique_id_r: link.target.label,
-    source_dataset_r: link.target.colorIndex,
+    source_dataset_r: numberToLetter(link.target.colorIndex),
     probability: link.probability
   }));
 
