@@ -171,6 +171,7 @@ function restart() {
     .on("click", function (d) {
       d.colorIndex = (d.colorIndex + 1) % 5;
       d3.select(this).style("fill", colors[d.colorIndex]);
+      updateTextarea();
       d3.event.stopPropagation();
     });
 
