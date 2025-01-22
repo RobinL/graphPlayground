@@ -12,9 +12,9 @@ var nodes = [
 var colors = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
 
 var links = [
-  { source: 0, target: 2, edgeColorIndex: 0 },
-  { source: 0, target: 1, edgeColorIndex: 0 },
-  { source: 1, target: 2, edgeColorIndex: 0 },
+  { source: 0, target: 2, edgeColorIndex: 0, probability: 0.9 },
+  { source: 0, target: 1, edgeColorIndex: 0, probability: 0.9 },
+  { source: 1, target: 2, edgeColorIndex: 0, probability: 0.9 },
 ];
 
 var lastNodeId = nodes.length
@@ -80,12 +80,16 @@ var simulation = d3.forceSimulation()
 
 //update positions of edges and vertices with each internal timer's tick
 function tick() {
-  edges.attr("x1", function (d) { return d.source.x; })
-    .attr("y1", function (d) { return d.source.y; })
-    .attr("x2", function (d) { return d.target.x; })
-    .attr("y2", function (d) { return d.target.y; });
+  edges.select("line")
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
 
-  // Update the position of the group
+  edges.select("text")
+    .attr("x", d => (d.source.x + d.target.x) / 2)
+    .attr("y", d => (d.source.y + d.target.y) / 2 - 5);
+
   vertices.attr("transform", function (d) {
     return "translate(" + d.x + "," + d.y + ")";
   });
@@ -97,21 +101,59 @@ function tick() {
 function restart() {
   edges = edges.data(links, d => `v${d.source.id}-v${d.target.id}`);
   edges.exit().remove();
-  edges = edges.enter()
-    .append("line")
+
+  // Create a group for each edge to hold both the line and the text
+  var edgeGroups = edges.enter()
+    .append("g")
+    .attr("class", "edge-group");
+
+  // Add the line to the edge group
+  edgeGroups.append("line")
     .attr("class", "edge")
     .on("mousedown", () => d3.event.stopPropagation())
     .on("contextmenu", removeEdge)
     .on("click", function (d) {
-      var colors = ["green", "grey", "orange", "red",];
+      var colors = ["green", "grey", "orange", "red"];
       d.edgeColorIndex = (d.edgeColorIndex + 1) % colors.length;
       d3.select(this)
         .style("stroke", colors[d.edgeColorIndex])
-        .style("stroke-dasharray", colors[d.edgeColorIndex] === "grey" ? "5,5" : "");  // Apply dotted line if grey
-    })
-    .merge(edges)
-    .style("stroke", d => ["green", "grey", "orange", "red",][d.edgeColorIndex])
-    .style("stroke-dasharray", d => d.edgeColorIndex === 1 ? "5,5" : "");  // Apply dotted line if grey
+        .style("stroke-dasharray", colors[d.edgeColorIndex] === "grey" ? "5,5" : "");
+    });
+
+  // Add the probability text to the edge group
+  edgeGroups.append("text")
+    .attr("class", "edge-text")
+    .attr("text-anchor", "middle")
+    .style("pointer-events", "none")
+    .style("user-select", "none")
+    .on("click", function (d) {
+      // Prevent click from propagating to other elements
+      d3.event.stopPropagation();
+    });
+
+  // Merge the groups
+  edges = edgeGroups.merge(edges);
+
+  // Update all lines
+  edges.select("line")
+    .style("stroke", d => ["green", "grey", "orange", "red"][d.edgeColorIndex])
+    .style("stroke-dasharray", d => d.edgeColorIndex === 1 ? "5,5" : "");
+
+  // Update all probability texts
+  edges.select("text")
+    .text(d => d.probability.toFixed(1))
+    .style("fill", d => ["green", "grey", "orange", "red"][d.edgeColorIndex])
+    .style("font-size", "10px")
+    .on("click", function (d) {
+      let newProb = prompt("Enter new probability (0-1):", d.probability);
+      if (newProb !== null) {
+        newProb = parseFloat(newProb);
+        if (!isNaN(newProb) && newProb >= 0 && newProb <= 1) {
+          d.probability = newProb;
+          d3.select(this).text(newProb.toFixed(1));
+        }
+      }
+    });
 
   vertices = vertices.data(nodes, d => d.id);
   vertices.exit().remove();
@@ -260,11 +302,12 @@ function endDragLine(d) {
     }
   }
 
-  // Create new link with edgeColorIndex
+  // Create new link with probability
   var newLink = {
     source: mousedownNode,
     target: d,
-    edgeColorIndex: 0 // Initialize edgeColorIndex to 0 (which corresponds to "grey")
+    edgeColorIndex: 0,
+    probability: 0.9  // Default probability
   };
 
   links.push(newLink);

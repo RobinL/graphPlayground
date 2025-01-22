@@ -104,3 +104,12 @@ svg {
 .dragLine.hidden {
   stroke-width:0;
 }
+
+.edge-text {
+  font-size: 10px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
