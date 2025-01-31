@@ -448,9 +448,6 @@ d3.select("#container")
   .on("click", dumpGraphData);
 
 function generatePythonCode() {
-  // Helper function to convert number to letter
-  const numberToLetter = (num) => String.fromCharCode(97 + num);
-
   // Format nodes
   const formattedNodes = nodes.map(node => ({
     unique_id: node.label,
@@ -471,14 +468,17 @@ function generatePythonCode() {
     links: formattedLinks
   };
 
+  // Output as pure JSON that can be loaded with json.loads
   return `import pandas as pd
 import json
 
-graph_data = ${JSON.stringify(graphData, null, 2)}
+# Load the graph data
+graph_data = json.loads('''
+${JSON.stringify(graphData, null, 2)}
+''')
 
 nodes_df = pd.DataFrame(graph_data["nodes"])
 links_df = pd.DataFrame(graph_data["links"])
-
 `;
 }
 
@@ -490,12 +490,114 @@ const controlsDiv = d3.select("#container")
   .style("margin-top", "20px")
   .style("position", "relative");  // Add relative positioning
 
-controlsDiv.append("button")
+// Create details/summary for input
+const details = controlsDiv.append("details")
+  .style("margin-bottom", "20px");
+
+details.append("summary")
+  .text("Import Graph Data")
+  .style("cursor", "pointer")
+  .style("padding", "10px")
+  .style("background-color", "#f5f5f5")
+  .style("border", "1px solid #ddd")
+  .style("border-radius", "4px");
+
+const inputDiv = details.append("div")
+  .style("margin", "10px 0")
+  .style("padding", "10px")
+  .style("border", "1px solid #ddd")
+  .style("border-radius", "4px");
+
+// Add input textarea
+const inputTextarea = inputDiv.append("textarea")
+  .attr("id", "graph-data-input")
+  .attr("rows", "15")
+  .attr("cols", "80")
+  .attr("placeholder", "Paste your graph_data here...")
+  .style("font-family", "monospace")
+  .style("width", "100%")
+  .style("margin-bottom", "10px");
+
+// Add load button below textarea
+inputDiv.append("button")
+  .text("Load Graph")
+  .style("display", "block")
+  .style("margin", "10px 0")
+  .on("click", function () {
+    try {
+      const inputText = inputTextarea.node().value;
+      let graphData;
+
+      try {
+        // First try parsing as pure JSON
+        graphData = JSON.parse(inputText);
+      } catch (e) {
+        // If that fails, try extracting JSON from Python code
+        const match = inputText.match(/json\.loads\(\s*'''([\s\S]*?)'''\s*\)/);
+        if (!match) {
+          throw new Error("Could not find valid JSON or Python json.loads format in input");
+        }
+        graphData = JSON.parse(match[1]);
+      }
+
+      // Validate the structure
+      if (!graphData.nodes || !graphData.links ||
+        !Array.isArray(graphData.nodes) || !Array.isArray(graphData.links)) {
+        throw new Error("Input must contain 'nodes' and 'links' arrays");
+      }
+
+      // Clear existing graph
+      nodes.splice(0);
+      links.splice(0);
+
+      // Add new nodes
+      graphData.nodes.forEach((node, index) => {
+        const colorIndex = node.source_dataset.charCodeAt(0) - 97; // Convert 'a' to 0, 'b' to 1, etc.
+        nodes.push({
+          id: index,
+          label: node.unique_id,
+          colorIndex: colorIndex,
+          sourceDataset: node.source_dataset,
+          x: w / 2 + (Math.random() - 0.5) * 100,  // Random position near center
+          y: h / 2 + (Math.random() - 0.5) * 100
+        });
+      });
+
+      // Add new links
+      graphData.links.forEach(link => {
+        const sourceNode = nodes.find(n => n.label === link.unique_id_l);
+        const targetNode = nodes.find(n => n.label === link.unique_id_r);
+        if (sourceNode && targetNode) {
+          links.push({
+            source: sourceNode,
+            target: targetNode,
+            probability: link.match_probability
+          });
+        }
+      });
+
+      lastNodeId = nodes.length;
+      restart();
+
+      // Close the details panel after successful load
+      details.node().open = false;
+    } catch (e) {
+      console.error("Error importing graph:", e);
+      alert("Error importing graph: " + e.message);
+    }
+  });
+
+// Output textarea section
+const outputDiv = controlsDiv.append("div")
+  .style("position", "relative")
+  .style("margin-top", "20px");
+
+outputDiv.append("button")
   .text("Copy to Clipboard")
-  .style("position", "absolute")  // Position button absolutely
+  .style("position", "absolute")
   .style("top", "0")
   .style("right", "0")
-  .style("z-index", "1")  // Ensure button stays on top
+  .style("z-index", "1")
   .on("click", function () {
     textarea.node().select();
     document.execCommand('copy');
@@ -506,13 +608,13 @@ controlsDiv.append("button")
     }, 1500);
   });
 
-const textarea = controlsDiv.append("textarea")
+const textarea = outputDiv.append("textarea")
   .attr("id", "graph-data")
-  .attr("rows", "30")  // Double the height
+  .attr("rows", "30")
   .attr("cols", "80")
   .style("font-family", "monospace")
-  .style("width", "100%")  // Make textarea fill container
-  .style("margin-top", "30px");  // Add space for button at top
+  .style("width", "100%")
+  .style("margin-top", "30px");
 
 // Function to update textarea
 function updateTextarea() {
