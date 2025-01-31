@@ -513,7 +513,7 @@ const inputTextarea = inputDiv.append("textarea")
   .attr("id", "graph-data-input")
   .attr("rows", "15")
   .attr("cols", "80")
-  .attr("placeholder", "Paste your graph_data here...")
+  .attr("placeholder", "Paste your graph_data here in same json format as the output below...")
   .style("font-family", "monospace")
   .style("width", "100%")
   .style("margin-bottom", "10px");
