@@ -409,29 +409,31 @@ function keyup() {
   }
 }
 
+function getGraphData() {
+    // Format nodes
+    const formattedNodes = nodes.map(node => ({
+      unique_id: node.label,
+      manual_override: node.manual_override
+    }));
+  
+    // Format links
+    const formattedLinks = links.map(link => ({
+      unique_id_l: link.source.label,
+      manual_override_l: link.source.manual_override,
+      unique_id_r: link.target.label,
+      manual_override_r: link.target.manual_override,
+      match_probability: link.probability
+    }));
+  
+    return {
+      nodes: formattedNodes,
+      links: formattedLinks
+    };
+}
+
 // Add this function after the other print functions
 function dumpGraphData() {
-  // Format nodes
-  const formattedNodes = nodes.map(node => ({
-    unique_id: node.label,
-    manual_override: node.manual_override
-  }));
-
-  // Format links
-  const formattedLinks = links.map(link => ({
-    unique_id_l: link.source.label,
-    source_dataset_l: link.source.sourceDataset,
-    unique_id_r: link.target.label,
-    source_dataset_r: link.target.sourceDataset,
-    match_probability: link.probability
-  }));
-
-  const graphData = {
-    nodes: formattedNodes,
-    links: formattedLinks
-  };
-
-  console.log(JSON.stringify(graphData, null, 2));
+  console.log(JSON.stringify(getGraphData(), null, 2));
 }
 
 // Add button handler after other button handlers
@@ -442,25 +444,8 @@ d3.select("#container")
   .on("click", dumpGraphData);
 
 function generatePythonCode() {
-  // Format nodes
-  const formattedNodes = nodes.map(node => ({
-    unique_id: node.label,
-    manual_override: node.manual_override
-  }));
 
-  // Format links
-  const formattedLinks = links.map(link => ({
-    unique_id_l: link.source.label,
-    manual_override_l: link.source.manual_override,
-    unique_id_r: link.target.label,
-    manual_override_r: link.target.manual_override,
-    match_probability: link.probability
-  }));
-
-  const graphData = {
-    nodes: formattedNodes,
-    links: formattedLinks
-  };
+  const graphData = getGraphData();
 
   // Output as pure JSON that can be loaded with json.loads
   return `import pandas as pd
