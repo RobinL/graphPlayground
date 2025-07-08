@@ -1,5 +1,3 @@
-// CORE STUFF TO DRAW GRAPH //
-
 import { COLORS, W, H, RAD, PROB_COLOR_SCALE, FORCES } from './constants.js';
 import * as model from './model.js';
 import * as renderer from './renderer.js';
@@ -8,17 +6,19 @@ import * as interactions from './interactions.js';
 import * as ui from './ui.js';
 import * as importExport from './importExport.js';
 
-// Add these variables near the top of the file with other state variables
-// These are still needed by interactions.js for now, will be moved in Step 7
-var isDraggingProb = false;
-var dragStartY;
-var dragStartProb;
+// Global D3 object (loaded from CDN in index.html)
+
+
+// These variables are still needed by interactions.js for now, will be moved in Step 7
+let isDraggingProb = false;
+let dragStartY;
+let dragStartProb;
 
 //dragLine is used to add edge graphicaly b/w two nodes
 //the two nodes of edges are mousedownNode and mouseupNode
-var mousedownNode = null;
-var mouseupNode = null;
-var dragLine;
+let mousedownNode = null;
+let mouseupNode = null;
+let dragLine;
 
 //update positions of edges and vertices with each internal timer's tick
 function tick() {
@@ -127,7 +127,7 @@ interactions.init(d3, svg, model, restart, simulation);
 simulation.init(d3, tick);
 
 // Initialize UI
-  ui.init(d3, model, restart);
+ui.init(d3, model, restart);
 
 // Initial call to restart
 restart();
