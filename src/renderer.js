@@ -1,6 +1,6 @@
 import { W, H, RAD, COLORS, PROB_COLOR_SCALE } from './constants.js';
 
-let svg, edges, vertices;
+let svg, edges, vertices, dragLine;
 
 // Callback functions to be set by other modules
 let onNodeClick = () => {};
@@ -23,6 +23,11 @@ export function init(selector, eventCallbacks) {
   edges = svg.append("g").selectAll(".edge");
   vertices = svg.append("g").selectAll(".vertex");
 
+  // ADD THIS
+  dragLine = svg.append("path")
+    .attr("class", "dragLine hidden")
+    .attr("d", "M0,0L0,0");
+
   // Assign callbacks
   onNodeClick = eventCallbacks.onNodeClick;
   onNodeContextMenu = eventCallbacks.onNodeContextMenu;
@@ -31,7 +36,8 @@ export function init(selector, eventCallbacks) {
   onEdgeContextMenu = eventCallbacks.onEdgeContextMenu;
   onEdgeMouseDown = eventCallbacks.onEdgeMouseDown;
 
-  return svg;
+  // CHANGE THE RETURN VALUE
+  return { svg, dragLine };
 }
 
 export function update(nodes, links) {

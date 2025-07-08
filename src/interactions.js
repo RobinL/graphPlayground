@@ -13,15 +13,12 @@ let model;
 let restartCallback;
 let d3_global;
 
-export function init(d3_obj, svgElement, dataModel, restartFn, simulation_obj) {
+export function init(d3_obj, svgElement, dragLineElement, dataModel, restartFn, simulation_obj) {
   d3_global = d3_obj;
   svg = svgElement;
+  dragLine = dragLineElement; // Assign the passed-in element
   model = dataModel;
   restartCallback = restartFn;
-
-  dragLine = svg.append("path")
-    .attr("class", "dragLine hidden")
-    .attr("d", "M0,0L0,0");
 
   svg.on("mousedown", () => {
     if (d3_global.event.button === 0) {

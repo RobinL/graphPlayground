@@ -112,10 +112,10 @@ const eventCallbacks = {
 };
 
 // Initialize the renderer
-const svg = renderer.init("#svg-wrap", eventCallbacks);
+const { svg, dragLine } = renderer.init("#svg-wrap", eventCallbacks);
 
 // Initialize interactions
-interactions.init(d3, svg, model, restart, simulation);
+interactions.init(d3, svg, dragLine, model, restart, simulation);
 
 // Initialize the simulation
 simulation.init(d3, tick);
