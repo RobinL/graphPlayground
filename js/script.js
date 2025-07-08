@@ -103,107 +103,60 @@ function tick() {
   });
 }
 
+function generateAutomaticEdges() {
+  // Filter out previous automatic links. Manual links remain.
+  let currentLinks = links.filter(link => !link.automatic);
+
+  // Iterate over all pairs of nodes
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const node1 = nodes[i];
+      const node2 = nodes[j];
+
+      const override1 = node1.manual_override;
+      const override2 = node2.manual_override;
+
+      // Only consider pairs where both have non-null manual_override values
+      if (override1 !== null && override2 !== null) {
+        let probability;
+        if (override1 === override2) {
+          probability = 1.0;
+        } else {
+          probability = 0.0;
+        }
+
+        // Find if a link (manual or automatic) already exists between these two nodes in the current set
+        let existingLink = currentLinks.find(link =>
+          (link.source === node1 && link.target === node2) ||
+          (link.source === node2 && link.target === node1)
+        );
+
+        if (existingLink) {
+          // If a link exists, update its probability and mark it as automatic
+          existingLink.probability = probability;
+          existingLink.automatic = true; // Mark it as automatic so it gets filtered next time
+        } else {
+          // If no link exists, create a new automatic one
+          currentLinks.push({
+            source: node1,
+            target: node2,
+            probability: probability,
+            automatic: true // Mark as an automatic edge
+          });
+        }
+      }
+    }
+  }
+  // Update the global links array with the new set of links
+  links = currentLinks;
+}
 
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
 function restart() {
-  edges = edges.data(links, d => `v${d.source.id}-v${d.target.id}`);
-  edges.exit().remove();
-
-  // Create a group for each edge to hold both the line and the text
-  var edgeGroups = edges.enter()
-    .append("g")
-    .attr("class", "edge-group");
-
-  // Add the line to the edge group
-  edgeGroups.append("line")
-    .attr("class", "edge")
-    .on("mousedown", () => d3.event.stopPropagation())
-    .on("contextmenu", removeEdge)
-    .on("mousedown.prob", function (d) {
-      isDraggingProb = true;
-      dragStartY = d3.event.y;
-      dragStartProb = d.probability;
-      d3.select(this).classed("active", true);
-      d3.event.stopPropagation();
-    });
-
-  // Add the probability text to the edge group
-  edgeGroups.append("text")
-    .attr("class", "edge-text")
-    .attr("text-anchor", "middle")
-    .style("pointer-events", "none")
-    .style("user-select", "none")
-    .on("click", function (d) {
-      // Prevent click from propagating to other elements
-      d3.event.stopPropagation();
-    });
-
-  // Merge the groups
-  edges = edgeGroups.merge(edges);
-
-  // Update all lines
-  edges.select("line")
-    .style("stroke", d => probColorScale(d.probability))
-    .style("stroke-dasharray", "none");
-
-  // Update all probability texts
-  edges.select("text")
-    .text(d => d.probability.toFixed(2))  // Show 2 decimal places
-    .style("fill", d => probColorScale(d.probability))
-    .style("font-size", "10px");
-
-  vertices = vertices.data(nodes, d => d.id);
-  vertices.exit().remove();
-
-  var enterVertices = vertices.enter()
-    .append("g")
-    .attr("class", "vertex-group");
-
-  enterVertices.append("circle")
-    .attr("r", rad)
-    .style("fill", d => d.colorIndex === null ? 'grey' : colors[d.colorIndex % 5])
-    .on("mousedown", beginDragLine)
-    .on("mouseup", endDragLine)
-    .on("contextmenu", removeNode)
-    .on("click", function (d) {
-      if (d.colorIndex === null) {
-        d.colorIndex = 0;
-      } else {
-        d.colorIndex = (d.colorIndex + 1) % 5;
-      }
-      d.manual_override = String.fromCharCode(97 + d.colorIndex);
-      d3.select(this).style("fill", colors[d.colorIndex]);
-      // Update the labels immediately
-      d3.select(this.parentNode).selectAll("text")
-        .text(d.label);
-      updateTextarea();
-      d3.event.stopPropagation();
-    });
-
-  enterVertices.append("text")
-    .attr("text-anchor", "middle")
-    .attr("dy", ".35em")
-    .style("pointer-events", "none")
-    .style("user-select", "none")
-    .style("stroke", "white")
-    .style("stroke-width", "2px");
-
-  enterVertices.append("text")
-    .attr("text-anchor", "middle")
-    .attr("dy", ".35em")
-    .style("pointer-events", "none")
-    .style("user-select", "none")
-    .style("fill", "black");
-
-  vertices = enterVertices.merge(vertices);
-
-  // Update all vertex labels
-  vertices.selectAll("text")
-    .text(d => d.label);
-
   simulation.nodes(nodes);
   simulation.force("link").links(links);
+  generateAutomaticEdges();
   simulation.alpha(0.8).restart();
 }
 
