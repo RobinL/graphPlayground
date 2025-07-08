@@ -3,6 +3,7 @@
 import { COLORS, W, H, RAD, PROB_COLOR_SCALE, FORCES } from './constants.js';
 import * as model from './model.js';
 import * as renderer from './renderer.js';
+import * as simulation from './simulation.js';
 
 // Add these variables near the top of the file with other state variables
 var isDraggingProb = false;
@@ -15,12 +16,7 @@ var mousedownNode = null;
 var mouseupNode = null;
 var dragLine;
 
-var simulation = d3.forceSimulation()
-  .force("charge", d3.forceManyBody().strength(FORCES.CHARGE_STRENGTH).distanceMax(FORCES.CHARGE_MAX_DISTANCE))
-  .force("link", d3.forceLink().distance(FORCES.LINK_DISTANCE).strength(FORCES.LINK_STRENGTH))
-  .force("x", d3.forceX(W / 2))
-  .force("y", d3.forceY(H / 2))
-  .on("tick", tick);
+
 
 //update positions of edges and vertices with each internal timer's tick
 function tick() {
@@ -80,16 +76,13 @@ function generateAutomaticEdges() {
 //interface is defined through several events
 function restart() {
   // Update the simulation with the new data
-  simulation.nodes(model.nodes);
-  simulation.force("link").links(model.links);
+  simulation.update(model.nodes, model.links);
 
   // (We'll move this later, but for now it stays)
   generateAutomaticEdges();
 
   // Tell the renderer to redraw everything
   renderer.update(model.nodes, model.links);
-
-  simulation.alpha(0.8).restart();
 }
 
 function resetMouseVar() {
@@ -174,6 +167,9 @@ const svg = renderer.init("#svg-wrap", eventCallbacks);
 dragLine = svg.append("path")
   .attr("class", "dragLine hidden")
   .attr("d", "M0,0L0,0");
+
+// Initialize the simulation
+simulation.init(tick);
 
 // Initial call to restart
 restart();
