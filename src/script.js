@@ -4,17 +4,9 @@ import { COLORS, W, H, RAD, PROB_COLOR_SCALE, FORCES } from './constants.js';
 import * as model from './model.js';
 import * as renderer from './renderer.js';
 import * as simulation from './simulation.js';
+import * as interactions from './interactions.js';
 
-// Add these variables near the top of the file with other state variables
-var isDraggingProb = false;
-var dragStartY;
-var dragStartProb;
 
-//dragLine is used to add edge graphicaly b/w two nodes
-//the two nodes of edges are mousedownNode and mouseupNode
-var mousedownNode = null;
-var mouseupNode = null;
-var dragLine;
 
 
 
@@ -85,43 +77,7 @@ function restart() {
   renderer.update(model.nodes, model.links);
 }
 
-function resetMouseVar() {
-  mousedownNode = null;
-  mouseupNode = null;
-}
 
-function hideDragLine() {
-  dragLine.classed("hidden", true);
-  resetMouseVar();
-  restart();
-}
-
-function beginDragLine(d) {
-  //to prevent call of addNode through svg
-  d3.event.stopPropagation();
-  //to prevent dragging of svg in firefox
-  d3.event.preventDefault();
-  if (d3.event.ctrlKey || d3.event.button != 0) return;
-  mousedownNode = d;
-  dragLine.classed("hidden", false)
-    .attr("d", "M" + mousedownNode.x + "," + mousedownNode.y +
-      "L" + mousedownNode.x + "," + mousedownNode.y);
-}
-
-function updateDragLine() {
-  if (!mousedownNode) return;
-  dragLine.attr("d", "M" + mousedownNode.x + "," + mousedownNode.y +
-    "L" + d3.mouse(svg.node())[0] + "," + d3.mouse(svg.node())[1]);
-}
-
-//no need to call hideDragLine in endDragLine
-//mouseup on vertices propagates to svg which calls hideDragLine
-function endDragLine(d) {
-  if (!mousedownNode || mousedownNode === d) return;
-
-  model.addLink(mousedownNode, d);
-  restart();
-}
 
 // Event callbacks for the renderer
 const eventCallbacks = {
@@ -135,7 +91,6 @@ const eventCallbacks = {
     d.manual_override = String.fromCharCode(97 + d.colorIndex);
     setTimeout(() => {
       restart();
-      updateTextarea(); // This will be moved later
     }, 0);
   },
   onNodeContextMenu: (d) => {
@@ -149,8 +104,8 @@ const eventCallbacks = {
     model.removeLink(d);
     restart();
   },
-  onNodeMouseDown: beginDragLine,
-  onNodeMouseUp: endDragLine,
+  onNodeMouseDown: interactions.beginDragLine,
+  onNodeMouseUp: interactions.endDragLine,
   onEdgeMouseDown: (d) => {
     isDraggingProb = true;
     dragStartY = d3.event.y;
@@ -163,13 +118,8 @@ const eventCallbacks = {
 // Initialize the renderer
 const svg = renderer.init("#svg-wrap", eventCallbacks);
 
-// Initialize dragLine after svg is initialized
-dragLine = svg.append("path")
-  .attr("class", "dragLine hidden")
-  .attr("d", "M0,0L0,0");
-
 // Initialize the simulation
-simulation.init(tick);
+simulation.init(d3, tick);
 
 // Initial call to restart
 restart();
