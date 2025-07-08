@@ -33,6 +33,7 @@ var isDraggingProb = false;
 var dragStartY;
 var dragStartProb;
 var showSourceDataset = false;
+var nodesAreNumbered = true;
 
 // Add this color scale near the top with other variables
 var probColorScale = d3.scaleLinear()
@@ -105,6 +106,20 @@ function tick() {
 }
 
 
+function getDisplayLabel(d) {
+  let nodeLabel, datasetLabel;
+
+  if (nodesAreNumbered) {
+    nodeLabel = d.label;
+    datasetLabel = d.sourceDataset;
+  } else {
+    nodeLabel = String.fromCharCode(96 + parseInt(d.label));
+    datasetLabel = (d.sourceDataset.charCodeAt(0) - 96).toString();
+  }
+
+  return showSourceDataset ? datasetLabel + nodeLabel : nodeLabel;
+}
+
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
 function restart() {
@@ -173,7 +188,7 @@ function restart() {
       d3.select(this).style("fill", colors[d.colorIndex]);
       // Update the labels immediately
       d3.select(this.parentNode).selectAll("text")
-        .text(showSourceDataset ? d.sourceDataset + d.label : d.label);
+        .text(getDisplayLabel(d));
       updateTextarea();
       d3.event.stopPropagation();
     });
@@ -197,7 +212,7 @@ function restart() {
 
   // Update all vertex labels
   vertices.selectAll("text")
-    .text(d => showSourceDataset ? d.sourceDataset + d.label : d.label);
+    .text(getDisplayLabel);
 
   simulation.nodes(nodes);
   simulation.force("link").links(links);
@@ -362,6 +377,13 @@ d3.select("#toggle-labels")
   .on("click", function () {
     showSourceDataset = !showSourceDataset;
     this.textContent = showSourceDataset ? "Hide Source Dataset" : "Show Source Dataset";
+    restart();
+  });
+
+d3.select("#toggle-numbering")
+  .on("click", function() {
+    nodesAreNumbered = !nodesAreNumbered;
+    this.textContent = nodesAreNumbered ? "Swap Numbering (Nodes: 1,2,3)" : "Swap Numbering (Nodes: A,B,C)";
     restart();
   });
 
