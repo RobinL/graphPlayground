@@ -1,13 +1,13 @@
 // CORE STUFF TO DRAW GRAPH //
 
+import { COLORS, W, H, RAD, PROB_COLOR_SCALE, FORCES } from './constants.js';
+
 //node ids are in order in which nodes come in existence
 var nodes = [
   { id: 0, label: "1", colorIndex: null, manual_override: null },
   { id: 1, label: "2", colorIndex: null, manual_override: null },
   { id: 2, label: "3", colorIndex: null, manual_override: null },
 ];
-
-var colors = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
 
 var links = [
   { source: 0, target: 2, edgeColorIndex: 0, probability: 0.9 },
@@ -16,27 +16,18 @@ var links = [
 ];
 
 var lastNodeId = nodes.length
-var viewWid = document.documentElement.clientWidth;
-var w = viewWid > 1200 ? 900 : 700;
-var h = w == 900 ? 600 : 500;
-var rad = 10;
 
-document.getElementById("container").style.width = "" + w + "px";
+document.getElementById("container").style.width = "" + W + "px";
 
 var svg = d3.select("#svg-wrap")
   .append("svg")
-  .attr("width", w)
-  .attr("height", h);
+  .attr("width", W)
+  .attr("height", H);
 
 // Add these variables near the top of the file with other state variables
 var isDraggingProb = false;
 var dragStartY;
 var dragStartProb;
-
-// Add this color scale near the top with other variables
-var probColorScale = d3.scaleLinear()
-  .domain([0, 0.5, 1])
-  .range(["red", "orange", "green"]);
 
 function print_stringified_links() {
 
@@ -80,10 +71,10 @@ var vertices = svg.append("g")
   .selectAll(".vertex");
 
 var simulation = d3.forceSimulation()
-  .force("charge", d3.forceManyBody().strength(-300).distanceMax(w / 2))
-  .force("link", d3.forceLink().distance(d => d.probability === 0 ? 150 : 60).strength(d => d.probability === 0 ? 0 : 1))
-  .force("x", d3.forceX(w / 2))
-  .force("y", d3.forceY(h / 2))
+  .force("charge", d3.forceManyBody().strength(FORCES.CHARGE_STRENGTH).distanceMax(FORCES.CHARGE_MAX_DISTANCE))
+  .force("link", d3.forceLink().distance(FORCES.LINK_DISTANCE).strength(FORCES.LINK_STRENGTH))
+  .force("x", d3.forceX(W / 2))
+  .force("y", d3.forceY(H / 2))
   .on("tick", tick);
 
 //update positions of edges and vertices with each internal timer's tick
@@ -198,13 +189,13 @@ function restart() {
 
   // Update all lines
   edges.select("line")
-    .style("stroke", d => probColorScale(d.probability))
+    .style("stroke", d => PROB_COLOR_SCALE(d.probability))
     .style("stroke-dasharray", "none");
 
   // Update all probability texts
   edges.select("text")
     .text(d => d.probability.toFixed(2))  // Show 2 decimal places
-    .style("fill", d => probColorScale(d.probability))
+    .style("fill", d => PROB_COLOR_SCALE(d.probability))
     .style("font-size", "10px");
 
   vertices = vertices.data(nodes, d => d.id);
@@ -215,8 +206,8 @@ function restart() {
     .attr("class", "vertex-group");
 
   enterVertices.append("circle")
-    .attr("r", rad)
-    .style("fill", d => d.colorIndex === null ? 'grey' : colors[d.colorIndex % 5])
+    .attr("r", RAD)
+    .style("fill", d => d.colorIndex === null ? 'grey' : COLORS[d.colorIndex % 5])
     .on("mousedown", beginDragLine)
     .on("mouseup", endDragLine)
     .on("contextmenu", removeNode)
@@ -254,7 +245,7 @@ function restart() {
 
   // Update all vertex circles
   vertices.select("circle")
-    .style("fill", d => d.colorIndex === null ? 'grey' : colors[d.colorIndex % 5]);
+    .style("fill", d => d.colorIndex === null ? 'grey' : COLORS[d.colorIndex % 5]);
 
   // Update all vertex labels
   vertices.selectAll("text")
@@ -290,8 +281,8 @@ svg.on("mousedown", addNode)
         parentGroup.select("text")
           .text(d.probability.toFixed(2));
         // Update colors
-        d3.select(this).style("stroke", probColorScale(d.probability));
-        parentGroup.select("text").style("fill", probColorScale(d.probability));
+        d3.select(this).style("stroke", PROB_COLOR_SCALE(d.probability));
+        parentGroup.select("text").style("fill", PROB_COLOR_SCALE(d.probability));
       });
     }
   })
@@ -593,8 +584,8 @@ inputDiv.append("button")
           label: node.unique_id,
           colorIndex: colorIndex,
           manual_override: node.manual_override,
-          x: w / 2 + (Math.random() - 0.5) * 100,  // Random position near center
-          y: h / 2 + (Math.random() - 0.5) * 100
+          x: W / 2 + (Math.random() - 0.5) * 100,  // Random position near center
+          y: H / 2 + (Math.random() - 0.5) * 100
         });
       });
 
