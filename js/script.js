@@ -154,9 +154,12 @@ function generateAutomaticEdges() {
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
 function restart() {
+  console.log("Restarting graph...");
+  console.log("Links before generateAutomaticEdges:", links);
   simulation.nodes(nodes);
   simulation.force("link").links(links);
   generateAutomaticEdges();
+  console.log("Links after generateAutomaticEdges:", links);
   edges = edges.data(links, d => `v${d.source.id}-v${d.target.id}`);
   edges.exit().remove();
 
