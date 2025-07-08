@@ -33,7 +33,9 @@ export function removeNode(nodeToRemove) {
   if (index > -1) {
     nodes.splice(index, 1);
     // Filter out links connected to the removed node
-    links = links.filter(l => l.source !== nodeToRemove && l.target !== nodeToRemove);
+    const linksToKeep = links.filter(l => l.source !== nodeToRemove && l.target !== nodeToRemove);
+    links.length = 0; // Clear the original array
+    links.push(...linksToKeep); // Add the filtered links back
   }
 }
 

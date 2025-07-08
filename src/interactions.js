@@ -124,8 +124,16 @@ function keydown() {
   }
 }
 
-function keyup() {
+export function keyup() {
   if (d3_global.event.key === "Meta") {
     d3_global.selectAll(".vertex-group circle").on("mousedown.drag", null);
   }
+}
+
+export function beginProbabilityDrag(d, event) {
+    isDraggingProb = true;
+    dragStartY = event.y;
+    dragStartProb = d.probability;
+    d3_global.select(event.currentTarget).classed("active", true);
+    event.stopPropagation();
 }

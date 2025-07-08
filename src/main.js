@@ -9,16 +9,7 @@ import * as importExport from './importExport.js';
 // Global D3 object (loaded from CDN in index.html)
 
 
-// These variables are still needed by interactions.js for now, will be moved in Step 7
-let isDraggingProb = false;
-let dragStartY;
-let dragStartProb;
 
-//dragLine is used to add edge graphicaly b/w two nodes
-//the two nodes of edges are mousedownNode and mouseupNode
-let mousedownNode = null;
-let mouseupNode = null;
-let dragLine;
 
 //update positions of edges and vertices with each internal timer's tick
 function tick() {
@@ -114,7 +105,10 @@ const eventCallbacks = {
     restart();
   },
   onNodeMouseDown: interactions.beginDragLine,
-  onNodeMouseUp: interactions.endDragLine
+  onNodeMouseUp: interactions.endDragLine,
+  onEdgeMouseDown: (d) => {
+    interactions.beginProbabilityDrag(d, d3.event);
+  }
 };
 
 // Initialize the renderer
