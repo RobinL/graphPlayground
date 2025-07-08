@@ -398,7 +398,7 @@ function endDragLine(d) {
   var newLink = {
     source: mousedownNode,
     target: d,
-    probability: 0.9  // Default probability
+    probability: 0.5  // Default probability
   };
 
   links.push(newLink);
