@@ -81,7 +81,7 @@ var vertices = svg.append("g")
 
 var simulation = d3.forceSimulation()
   .force("charge", d3.forceManyBody().strength(-300).distanceMax(w / 2))
-  .force("link", d3.forceLink().distance(60))
+  .force("link", d3.forceLink().distance(d => d.probability === 0 ? 150 : 60).strength(d => d.probability === 0 ? 0 : 1))
   .force("x", d3.forceX(w / 2))
   .force("y", d3.forceY(h / 2))
   .on("tick", tick);
@@ -157,9 +157,10 @@ function restart() {
   console.log("Restarting graph...");
   console.log("Links before generateAutomaticEdges:", links);
   simulation.nodes(nodes);
-  simulation.force("link").links(links);
-  generateAutomaticEdges();
+  simulation.force("link").links(links); // This line resolves source/target to node objects
+  generateAutomaticEdges(); // Now generateAutomaticEdges will have correct node references
   console.log("Links after generateAutomaticEdges:", links);
+
   edges = edges.data(links, d => `v${d.source.id}-v${d.target.id}`);
   edges.exit().remove();
 
@@ -465,25 +466,25 @@ function keyup() {
 }
 
 function getGraphData() {
-    // Format nodes
-    const formattedNodes = nodes.map(node => ({
-      unique_id: node.label,
-      manual_override: node.manual_override
-    }));
-  
-    // Format links
-    const formattedLinks = links.map(link => ({
-      unique_id_l: link.source.label,
-      manual_override_l: link.source.manual_override,
-      unique_id_r: link.target.label,
-      manual_override_r: link.target.manual_override,
-      match_probability: link.probability
-    }));
-  
-    return {
-      nodes: formattedNodes,
-      links: formattedLinks
-    };
+  // Format nodes
+  const formattedNodes = nodes.map(node => ({
+    unique_id: node.label,
+    manual_override: node.manual_override
+  }));
+
+  // Format links
+  const formattedLinks = links.map(link => ({
+    unique_id_l: link.source.label,
+    manual_override_l: link.source.manual_override,
+    unique_id_r: link.target.label,
+    manual_override_r: link.target.manual_override,
+    match_probability: link.probability
+  }));
+
+  return {
+    nodes: formattedNodes,
+    links: formattedLinks
+  };
 }
 
 // Add this function after the other print functions
