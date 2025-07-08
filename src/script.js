@@ -5,10 +5,20 @@ import * as model from './model.js';
 import * as renderer from './renderer.js';
 import * as simulation from './simulation.js';
 import * as interactions from './interactions.js';
+import * as ui from './ui.js';
+import * as importExport from './importExport.js';
 
+// Add these variables near the top of the file with other state variables
+// These are still needed by interactions.js for now, will be moved in Step 7
+var isDraggingProb = false;
+var dragStartY;
+var dragStartProb;
 
-
-
+//dragLine is used to add edge graphicaly b/w two nodes
+//the two nodes of edges are mousedownNode and mouseupNode
+var mousedownNode = null;
+var mouseupNode = null;
+var dragLine;
 
 //update positions of edges and vertices with each internal timer's tick
 function tick() {
@@ -75,9 +85,8 @@ function restart() {
 
   // Tell the renderer to redraw everything
   renderer.update(model.nodes, model.links);
+  ui.updateTextarea(); // Call ui.updateTextarea here
 }
-
-
 
 // Event callbacks for the renderer
 const eventCallbacks = {
@@ -117,17 +126,9 @@ interactions.init(d3, svg, model, restart, simulation);
 // Initialize the simulation
 simulation.init(d3, tick);
 
+// Initialize UI
+  ui.init(d3, model, restart);
+
 // Initial call to restart
 restart();
-
-// FUNCTIONS TO MANIPULATE GRAPH //
-
-// Keep just the clear button handler
-d3.select("#clear")
-  .on('click', function () {
-    model.clearGraph();
-    restart();
-  });
-
-
-
+ui.updateTextarea(model);
