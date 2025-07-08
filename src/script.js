@@ -1,21 +1,7 @@
 // CORE STUFF TO DRAW GRAPH //
 
 import { COLORS, W, H, RAD, PROB_COLOR_SCALE, FORCES } from './constants.js';
-
-//node ids are in order in which nodes come in existence
-var nodes = [
-  { id: 0, label: "1", colorIndex: null, manual_override: null },
-  { id: 1, label: "2", colorIndex: null, manual_override: null },
-  { id: 2, label: "3", colorIndex: null, manual_override: null },
-];
-
-var links = [
-  { source: 0, target: 2, edgeColorIndex: 0, probability: 0.9 },
-  { source: 0, target: 1, edgeColorIndex: 0, probability: 0.9 },
-  { source: 1, target: 2, edgeColorIndex: 0, probability: 0.9 },
-];
-
-var lastNodeId = nodes.length
+import * as model from './model.js';
 
 document.getElementById("container").style.width = "" + W + "px";
 
@@ -29,36 +15,6 @@ var isDraggingProb = false;
 var dragStartY;
 var dragStartProb;
 
-function print_stringified_links() {
-
-  var stringified_links = links.map(function (link) {
-    return {
-      source: link.source.id,
-      target: link.target.id
-    }
-  })
-  // stringify the links
-
-  var stringified_links = JSON.stringify(stringified_links)
-  // print the links
-  console.log(stringified_links)
-}
-
-function print_stringified_nodes() {
-  // retain only the id label and colorindex
-  var stringified_nodes = nodes.map(function (node) {
-    return {
-      id: node.id,
-      label: node.label,
-      colorIndex: node.colorIndex
-    }
-  })
-  // stringify the nodes
-  var stringified_nodes = JSON.stringify(stringified_nodes)
-  // print the nodes
-  console.log(stringified_nodes)
-
-}
 //the animation line when adding edge b/w two vertices
 var dragLine = svg.append("path")
   .attr("class", "dragLine hidden")
@@ -96,13 +52,13 @@ function tick() {
 
 function generateAutomaticEdges() {
   // Filter out previous automatic links. Manual links remain.
-  let currentLinks = links.filter(link => !link.automatic);
+  let currentLinks = model.links.filter(link => !link.automatic);
 
   // Iterate over all pairs of nodes
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      const node1 = nodes[i];
-      const node2 = nodes[j];
+  for (let i = 0; i < model.nodes.length; i++) {
+    for (let j = i + 1; j < model.nodes.length; j++) {
+      const node1 = model.nodes[i];
+      const node2 = model.nodes[j];
 
       const override1 = node1.manual_override;
       const override2 = node2.manual_override;
@@ -139,20 +95,21 @@ function generateAutomaticEdges() {
     }
   }
   // Update the global links array with the new set of links
-  links = currentLinks;
+  model.links.length = 0; // Clear the existing array
+  model.links.push(...currentLinks); // Add all elements from currentLinks
 }
 
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
 function restart() {
   console.log("Restarting graph...");
-  console.log("Links before generateAutomaticEdges:", links);
-  simulation.nodes(nodes);
-  simulation.force("link").links(links); // This line resolves source/target to node objects
+  console.log("Links before generateAutomaticEdges:", model.links);
+  simulation.nodes(model.nodes);
+  simulation.force("link").links(model.links); // This line resolves source/target to node objects
   generateAutomaticEdges(); // Now generateAutomaticEdges will have correct node references
-  console.log("Links after generateAutomaticEdges:", links);
+  console.log("Links after generateAutomaticEdges:", model.links);
 
-  edges = edges.data(links, d => `v${d.source.id}-v${d.target.id}`);
+  edges = edges.data(model.links, d => `v${d.source.id}-v${d.target.id}`);
   edges.exit().remove();
 
   // Create a group for each edge to hold both the line and the text
@@ -198,7 +155,7 @@ function restart() {
     .style("fill", d => PROB_COLOR_SCALE(d.probability))
     .style("font-size", "10px");
 
-  vertices = vertices.data(nodes, d => d.id);
+  vertices = vertices.data(model.nodes, d => d.id);
   vertices.exit().remove();
 
   var enterVertices = vertices.enter()
@@ -300,17 +257,7 @@ svg.on("mousedown", addNode)
 function addNode() {
   if (d3.event.button == 0) {
     var coords = d3.mouse(this);
-    var label = (lastNodeId + 1).toString();
-
-    var newNode = {
-      id: ++lastNodeId,
-      label: label,
-      colorIndex: null,
-      manual_override: null,
-      x: coords[0],
-      y: coords[1]
-    };
-    nodes.push(newNode);
+    model.addNode(coords);
     restart();
   }
 }
@@ -320,19 +267,13 @@ function addNode() {
 function removeNode(d, i) {
   //to make ctrl-drag works for mac/osx users
   if (d3.event.ctrlKey) return;
-  nodes.splice(nodes.indexOf(d), 1);
-  var linksToRemove = links.filter(function (l) {
-    return l.source === d || l.target === d;
-  });
-  linksToRemove.map(function (l) {
-    links.splice(links.indexOf(l), 1);
-  });
+  model.removeNode(d);
   d3.event.preventDefault();
   restart();
 }
 
 function removeEdge(d, i) {
-  links.splice(links.indexOf(d), 1);
+  model.removeLink(d);
   d3.event.preventDefault();
   restart();
 }
@@ -377,22 +318,7 @@ function updateDragLine() {
 function endDragLine(d) {
   if (!mousedownNode || mousedownNode === d) return;
 
-  // Return if link already exists
-  for (var i = 0; i < links.length; i++) {
-    var l = links[i];
-    if ((l.source === mousedownNode && l.target === d) || (l.source === d && l.target === mousedownNode)) {
-      return;
-    }
-  }
-
-  // Create new link with probability
-  var newLink = {
-    source: mousedownNode,
-    target: d,
-    probability: 0.5  // Default probability
-  };
-
-  links.push(newLink);
+  model.addLink(mousedownNode, d);
   restart();
 }
 
@@ -400,9 +326,7 @@ function endDragLine(d) {
 // Keep just the clear button handler
 d3.select("#clear")
   .on('click', function () {
-    nodes.splice(0);
-    links.splice(0);
-    lastNodeId = 0;
+    model.clearGraph();
     restart();
   });
 
@@ -458,13 +382,13 @@ function keyup() {
 
 function getGraphData() {
   // Format nodes
-  const formattedNodes = nodes.map(node => ({
+  const formattedNodes = model.nodes.map(node => ({
     unique_id: node.label,
     manual_override: node.manual_override
   }));
 
   // Format links
-  const formattedLinks = links.map(link => ({
+  const formattedLinks = model.links.map(link => ({
     unique_id_l: link.source.label,
     manual_override_l: link.source.manual_override,
     unique_id_r: link.target.label,
@@ -573,13 +497,13 @@ inputDiv.append("button")
       }
 
       // Clear existing graph
-      nodes.splice(0);
-      links.splice(0);
+      model.nodes.splice(0);
+      model.links.splice(0);
 
       // Add new nodes
       graphData.nodes.forEach((node, index) => {
         const colorIndex = node.manual_override ? node.manual_override.charCodeAt(0) - 97 : null; // Convert 'a' to 0, 'b' to 1, etc.
-        nodes.push({
+        model.nodes.push({
           id: index,
           label: node.unique_id,
           colorIndex: colorIndex,
@@ -591,10 +515,10 @@ inputDiv.append("button")
 
       // Add new links
       graphData.links.forEach(link => {
-        const sourceNode = nodes.find(n => n.label === link.unique_id_l);
-        const targetNode = nodes.find(n => n.label === link.unique_id_r);
+        const sourceNode = model.nodes.find(n => n.label === link.unique_id_l);
+        const targetNode = model.nodes.find(n => n.label === link.unique_id_r);
         if (sourceNode && targetNode) {
-          links.push({
+          model.links.push({
             source: sourceNode,
             target: targetNode,
             probability: link.match_probability
@@ -602,7 +526,7 @@ inputDiv.append("button")
         }
       });
 
-      lastNodeId = nodes.length;
+      model.lastNodeId = model.nodes.length;
       restart();
 
       // Close the details panel after successful load
