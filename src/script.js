@@ -2,29 +2,18 @@
 
 import { COLORS, W, H, RAD, PROB_COLOR_SCALE, FORCES } from './constants.js';
 import * as model from './model.js';
-
-document.getElementById("container").style.width = "" + W + "px";
-
-var svg = d3.select("#svg-wrap")
-  .append("svg")
-  .attr("width", W)
-  .attr("height", H);
+import * as renderer from './renderer.js';
 
 // Add these variables near the top of the file with other state variables
 var isDraggingProb = false;
 var dragStartY;
 var dragStartProb;
 
-//the animation line when adding edge b/w two vertices
-var dragLine = svg.append("path")
-  .attr("class", "dragLine hidden")
-  .attr("d", "M0,0L0,0");
-
-var edges = svg.append("g")
-  .selectAll(".edge");
-
-var vertices = svg.append("g")
-  .selectAll(".vertex");
+//dragLine is used to add edge graphicaly b/w two nodes
+//the two nodes of edges are mousedownNode and mouseupNode
+var mousedownNode = null;
+var mouseupNode = null;
+var dragLine;
 
 var simulation = d3.forceSimulation()
   .force("charge", d3.forceManyBody().strength(FORCES.CHARGE_STRENGTH).distanceMax(FORCES.CHARGE_MAX_DISTANCE))
@@ -35,19 +24,7 @@ var simulation = d3.forceSimulation()
 
 //update positions of edges and vertices with each internal timer's tick
 function tick() {
-  edges.select("line")
-    .attr("x1", d => d.source.x)
-    .attr("y1", d => d.source.y)
-    .attr("x2", d => d.target.x)
-    .attr("y2", d => d.target.y);
-
-  edges.select("text")
-    .attr("x", d => (d.source.x + d.target.x) / 2)
-    .attr("y", d => (d.source.y + d.target.y) / 2 - 5);
-
-  vertices.attr("transform", function (d) {
-    return "translate(" + d.x + "," + d.y + ")";
-  });
+  renderer.updatePositions();
 }
 
 function generateAutomaticEdges() {
@@ -102,187 +79,18 @@ function generateAutomaticEdges() {
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
 function restart() {
-  console.log("Restarting graph...");
-  console.log("Links before generateAutomaticEdges:", model.links);
+  // Update the simulation with the new data
   simulation.nodes(model.nodes);
-  simulation.force("link").links(model.links); // This line resolves source/target to node objects
-  generateAutomaticEdges(); // Now generateAutomaticEdges will have correct node references
-  console.log("Links after generateAutomaticEdges:", model.links);
+  simulation.force("link").links(model.links);
 
-  edges = edges.data(model.links, d => `v${d.source.id}-v${d.target.id}`);
-  edges.exit().remove();
+  // (We'll move this later, but for now it stays)
+  generateAutomaticEdges();
 
-  // Create a group for each edge to hold both the line and the text
-  var edgeGroups = edges.enter()
-    .append("g")
-    .attr("class", "edge-group");
-
-  // Add the line to the edge group
-  edgeGroups.append("line")
-    .attr("class", "edge")
-    .on("mousedown", () => d3.event.stopPropagation())
-    .on("contextmenu", removeEdge)
-    .on("mousedown.prob", function (d) {
-      isDraggingProb = true;
-      dragStartY = d3.event.y;
-      dragStartProb = d.probability;
-      d3.select(this).classed("active", true);
-      d3.event.stopPropagation();
-    });
-
-  // Add the probability text to the edge group
-  edgeGroups.append("text")
-    .attr("class", "edge-text")
-    .attr("text-anchor", "middle")
-    .style("pointer-events", "none")
-    .style("user-select", "none")
-    .on("click", function (d) {
-      // Prevent click from propagating to other elements
-      d3.event.stopPropagation();
-    });
-
-  // Merge the groups
-  edges = edgeGroups.merge(edges);
-
-  // Update all lines
-  edges.select("line")
-    .style("stroke", d => PROB_COLOR_SCALE(d.probability))
-    .style("stroke-dasharray", "none");
-
-  // Update all probability texts
-  edges.select("text")
-    .text(d => d.probability.toFixed(2))  // Show 2 decimal places
-    .style("fill", d => PROB_COLOR_SCALE(d.probability))
-    .style("font-size", "10px");
-
-  vertices = vertices.data(model.nodes, d => d.id);
-  vertices.exit().remove();
-
-  var enterVertices = vertices.enter()
-    .append("g")
-    .attr("class", "vertex-group");
-
-  enterVertices.append("circle")
-    .attr("r", RAD)
-    .style("fill", d => d.colorIndex === null ? 'grey' : COLORS[d.colorIndex % 5])
-    .on("mousedown", beginDragLine)
-    .on("mouseup", endDragLine)
-    .on("contextmenu", removeNode)
-    .on("click", function (d) {
-      d3.event.stopPropagation();
-      if (d.colorIndex === null) {
-        d.colorIndex = 0;
-      } else {
-        d.colorIndex = (d.colorIndex + 1) % 5;
-      }
-      d.manual_override = String.fromCharCode(97 + d.colorIndex);
-      
-      setTimeout(() => {
-        restart();
-        updateTextarea();
-      }, 0);
-    });
-
-  enterVertices.append("text")
-    .attr("text-anchor", "middle")
-    .attr("dy", ".35em")
-    .style("pointer-events", "none")
-    .style("user-select", "none")
-    .style("stroke", "white")
-    .style("stroke-width", "2px");
-
-  enterVertices.append("text")
-    .attr("text-anchor", "middle")
-    .attr("dy", ".35em")
-    .style("pointer-events", "none")
-    .style("user-select", "none")
-    .style("fill", "black");
-
-  vertices = enterVertices.merge(vertices);
-
-  // Update all vertex circles
-  vertices.select("circle")
-    .style("fill", d => d.colorIndex === null ? 'grey' : COLORS[d.colorIndex % 5]);
-
-  // Update all vertex labels
-  vertices.selectAll("text")
-    .text(d => d.label);
+  // Tell the renderer to redraw everything
+  renderer.update(model.nodes, model.links);
 
   simulation.alpha(0.8).restart();
 }
-
-
-restart();
-
-// CORE STUFF TO DRAW GRAPH ENDS //
-
-// FUNCTIONS TO MANIPULATE GRAPH //
-
-//interface for manipulation
-svg.on("mousedown", addNode)
-  .on("mousemove", updateDragLine)
-  .on("mouseup", hideDragLine)
-  .on("contextmenu", function () { d3.event.preventDefault(); })
-  .on("mouseleave", hideDragLine)
-  .on("mousemove.prob", function () {
-    if (isDraggingProb) {
-      let dy = d3.event.y - dragStartY;
-      // Increase sensitivity and precision
-      let probChange = -dy * 0.001;  // Reduced from 0.005 to 0.001 for finer control
-
-      edges.selectAll("line.active").each(function (d) {
-        // Update probability, keeping it between 0 and 1
-        d.probability = Math.min(1, Math.max(0, Math.round((dragStartProb + probChange) * 100) / 100));
-        // Update the text and color
-        let parentGroup = d3.select(this.parentNode);
-        parentGroup.select("text")
-          .text(d.probability.toFixed(2));
-        // Update colors
-        d3.select(this).style("stroke", PROB_COLOR_SCALE(d.probability));
-        parentGroup.select("text").style("fill", PROB_COLOR_SCALE(d.probability));
-      });
-    }
-  })
-  .on("mouseup.prob", function () {
-    isDraggingProb = false;
-    edges.selectAll("line").classed("active", false);
-  })
-  .on("mouseleave.prob", function () {
-    if (isDraggingProb) {
-      isDraggingProb = false;
-      edges.selectAll("line").classed("active", false);
-    }
-  });
-
-function addNode() {
-  if (d3.event.button == 0) {
-    var coords = d3.mouse(this);
-    model.addNode(coords);
-    restart();
-  }
-}
-
-
-//d is data, i is index according to selection
-function removeNode(d, i) {
-  //to make ctrl-drag works for mac/osx users
-  if (d3.event.ctrlKey) return;
-  model.removeNode(d);
-  d3.event.preventDefault();
-  restart();
-}
-
-function removeEdge(d, i) {
-  model.removeLink(d);
-  d3.event.preventDefault();
-  restart();
-}
-
-//dragLine is used to add edge graphicaly b/w two nodes
-
-//the two nodes of edges are mousedownNode and mouseupNode
-var mousedownNode = null;
-var mouseupNode = null;
 
 function resetMouseVar() {
   mousedownNode = null;
@@ -310,7 +118,7 @@ function beginDragLine(d) {
 function updateDragLine() {
   if (!mousedownNode) return;
   dragLine.attr("d", "M" + mousedownNode.x + "," + mousedownNode.y +
-    "L" + d3.mouse(this)[0] + "," + d3.mouse(this)[1]);
+    "L" + d3.mouse(svg.node())[0] + "," + d3.mouse(svg.node())[1]);
 }
 
 //no need to call hideDragLine in endDragLine
@@ -322,6 +130,99 @@ function endDragLine(d) {
   restart();
 }
 
+// Event callbacks for the renderer
+const eventCallbacks = {
+  onNodeClick: (d) => {
+    d3.event.stopPropagation();
+    if (d.colorIndex === null) {
+      d.colorIndex = 0;
+    } else {
+      d.colorIndex = (d.colorIndex + 1) % 5;
+    }
+    d.manual_override = String.fromCharCode(97 + d.colorIndex);
+    setTimeout(() => {
+      restart();
+      updateTextarea(); // This will be moved later
+    }, 0);
+  },
+  onNodeContextMenu: (d) => {
+    if (d3.event.ctrlKey) return;
+    d3.event.preventDefault();
+    model.removeNode(d);
+    restart();
+  },
+  onEdgeContextMenu: (d) => {
+    d3.event.preventDefault();
+    model.removeLink(d);
+    restart();
+  },
+  onNodeMouseDown: beginDragLine,
+  onNodeMouseUp: endDragLine,
+  onEdgeMouseDown: (d) => {
+    isDraggingProb = true;
+    dragStartY = d3.event.y;
+    dragStartProb = d.probability;
+    d3.select(d3.event.currentTarget).classed("active", true);
+    d3.event.stopPropagation();
+  }
+};
+
+// Initialize the renderer
+const svg = renderer.init("#svg-wrap", eventCallbacks);
+
+// Initialize dragLine after svg is initialized
+dragLine = svg.append("path")
+  .attr("class", "dragLine hidden")
+  .attr("d", "M0,0L0,0");
+
+// Initial call to restart
+restart();
+
+// FUNCTIONS TO MANIPULATE GRAPH //
+
+//interface for manipulation
+svg.on("mousedown", () => {
+  if (d3.event.button === 0) {
+    model.addNode(d3.mouse(svg.node()));
+    restart();
+  }
+})
+  .on("mousemove", updateDragLine)
+  .on("mouseup", hideDragLine)
+  .on("contextmenu", function () { d3.event.preventDefault(); })
+  .on("mouseleave", hideDragLine)
+  .on("mousemove.prob", function () {
+    if (isDraggingProb) {
+      let dy = d3.event.y - dragStartY;
+      // Increase sensitivity and precision
+      let probChange = -dy * 0.001;  // Reduced from 0.005 to 0.001 for finer control
+
+      // We need to get the current edges selection from the renderer
+      // For now, we'll assume edges is still globally accessible or re-select it
+      // This will be properly handled when interactions are moved.
+      d3.selectAll(".edge-group line.active").each(function (d) {
+        // Update probability, keeping it between 0 and 1
+        d.probability = Math.min(1, Math.max(0, Math.round((dragStartProb + probChange) * 100) / 100));
+        // Update the text and color
+        let parentGroup = d3.select(this.parentNode);
+        parentGroup.select("text")
+          .text(d.probability.toFixed(2));
+        // Update colors
+        d3.select(this).style("stroke", PROB_COLOR_SCALE(d.probability));
+        parentGroup.select("text").style("fill", PROB_COLOR_SCALE(d.probability));
+      });
+    }
+  })
+  .on("mouseup.prob", function () {
+    isDraggingProb = false;
+    d3.selectAll(".edge-group line").classed("active", false);
+  })
+  .on("mouseleave.prob", function () {
+    if (isDraggingProb) {
+      isDraggingProb = false;
+      d3.selectAll(".edge-group line").classed("active", false);
+    }
+  });
 
 // Keep just the clear button handler
 d3.select("#clear")
@@ -330,11 +231,7 @@ d3.select("#clear")
     restart();
   });
 
-// FUNCTIONS TO MANIPULATE GRAPH ENDS //
-
 // Functions to enable draging of nodes when ctrl is held
-
-//one response per ctrl keydown
 var lastKeyDown = -1;
 
 d3.select(window)
@@ -349,9 +246,8 @@ function keydown() {
 
     lastKeyDown = d3.event.key;
 
-    vertices_groups = d3.selectAll(".vertex-group");
-
-    vertices_groups.call(d3.drag()
+    // This will be moved to interactions.js
+    d3.selectAll(".vertex-group").call(d3.drag()
       .on("start", function dragstarted(d) {
         console.log("drag start");
         if (!d3.event.active) simulation.alphaTarget(1).restart();
@@ -376,7 +272,8 @@ function keyup() {
   // Reset lastKeyDown only if "Meta" (Command) was released
   if (d3.event.key === "Meta") {
     lastKeyDown = -1;
-    vertices.on("mousedown.drag", null);
+    // This will be moved to interactions.js
+    d3.selectAll(".vertex-group circle").on("mousedown.drag", null);
   }
 }
 
