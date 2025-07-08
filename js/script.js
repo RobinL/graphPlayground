@@ -2,9 +2,9 @@
 
 //node ids are in order in which nodes come in existence
 var nodes = [
-  { id: 0, label: "1", colorIndex: 0, sourceDataset: 'a' },
-  { id: 1, label: "2", colorIndex: 0, sourceDataset: 'a' },
-  { id: 2, label: "3", colorIndex: 0, sourceDataset: 'a' },
+  { id: 0, label: "1", colorIndex: null, manual_override: null },
+  { id: 1, label: "2", colorIndex: null, manual_override: null },
+  { id: 2, label: "3", colorIndex: null, manual_override: null },
 ];
 
 var colors = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
@@ -32,8 +32,6 @@ var svg = d3.select("#svg-wrap")
 var isDraggingProb = false;
 var dragStartY;
 var dragStartProb;
-var showSourceDataset = false;
-var nodesAreNumbered = true;
 
 // Add this color scale near the top with other variables
 var probColorScale = d3.scaleLinear()
@@ -106,20 +104,6 @@ function tick() {
 }
 
 
-function getDisplayLabel(d) {
-  let nodeLabel, datasetLabel;
-
-  if (nodesAreNumbered) {
-    nodeLabel = d.label;
-    datasetLabel = d.sourceDataset;
-  } else {
-    nodeLabel = String.fromCharCode(96 + parseInt(d.label));
-    datasetLabel = (d.sourceDataset.charCodeAt(0) - 96).toString();
-  }
-
-  return showSourceDataset ? datasetLabel + nodeLabel : nodeLabel;
-}
-
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
 function restart() {
@@ -178,17 +162,21 @@ function restart() {
 
   enterVertices.append("circle")
     .attr("r", rad)
-    .style("fill", d => colors[d.colorIndex % 5])
+    .style("fill", d => d.colorIndex === null ? 'grey' : colors[d.colorIndex % 5])
     .on("mousedown", beginDragLine)
     .on("mouseup", endDragLine)
     .on("contextmenu", removeNode)
     .on("click", function (d) {
-      d.colorIndex = (d.colorIndex + 1) % 5;
-      d.sourceDataset = String.fromCharCode(97 + d.colorIndex);
+      if (d.colorIndex === null) {
+        d.colorIndex = 0;
+      } else {
+        d.colorIndex = (d.colorIndex + 1) % 5;
+      }
+      d.manual_override = String.fromCharCode(97 + d.colorIndex);
       d3.select(this).style("fill", colors[d.colorIndex]);
       // Update the labels immediately
       d3.select(this.parentNode).selectAll("text")
-        .text(getDisplayLabel(d));
+        .text(d.label);
       updateTextarea();
       d3.event.stopPropagation();
     });
@@ -212,7 +200,7 @@ function restart() {
 
   // Update all vertex labels
   vertices.selectAll("text")
-    .text(getDisplayLabel);
+    .text(d => d.label);
 
   simulation.nodes(nodes);
   simulation.force("link").links(links);
@@ -266,13 +254,12 @@ function addNode() {
   if (d3.event.button == 0) {
     var coords = d3.mouse(this);
     var label = (lastNodeId + 1).toString();
-    var sourceDataset = String.fromCharCode(97); // 'a' for default colorIndex 0
 
     var newNode = {
       id: ++lastNodeId,
       label: label,
-      colorIndex: 0,
-      sourceDataset: sourceDataset,
+      colorIndex: null,
+      manual_override: null,
       x: coords[0],
       y: coords[1]
     };
@@ -372,21 +359,6 @@ d3.select("#clear")
     restart();
   });
 
-// Add near the other button handlers
-d3.select("#toggle-labels")
-  .on("click", function () {
-    showSourceDataset = !showSourceDataset;
-    this.textContent = showSourceDataset ? "Hide Source Dataset" : "Show Source Dataset";
-    restart();
-  });
-
-d3.select("#toggle-numbering")
-  .on("click", function() {
-    nodesAreNumbered = !nodesAreNumbered;
-    this.textContent = nodesAreNumbered ? "Swap Numbering (Nodes: 1,2,3)" : "Swap Numbering (Nodes: A,B,C)";
-    restart();
-  });
-
 // FUNCTIONS TO MANIPULATE GRAPH ENDS //
 
 // Functions to enable draging of nodes when ctrl is held
@@ -442,7 +414,7 @@ function dumpGraphData() {
   // Format nodes
   const formattedNodes = nodes.map(node => ({
     unique_id: node.label,
-    source_dataset: node.sourceDataset
+    manual_override: node.manual_override
   }));
 
   // Format links
@@ -473,15 +445,15 @@ function generatePythonCode() {
   // Format nodes
   const formattedNodes = nodes.map(node => ({
     unique_id: node.label,
-    source_dataset: node.sourceDataset
+    manual_override: node.manual_override
   }));
 
   // Format links
   const formattedLinks = links.map(link => ({
     unique_id_l: link.source.label,
-    source_dataset_l: link.source.sourceDataset,
+    manual_override_l: link.source.manual_override,
     unique_id_r: link.target.label,
-    source_dataset_r: link.target.sourceDataset,
+    manual_override_r: link.target.manual_override,
     match_probability: link.probability
   }));
 
@@ -574,12 +546,12 @@ inputDiv.append("button")
 
       // Add new nodes
       graphData.nodes.forEach((node, index) => {
-        const colorIndex = node.source_dataset.charCodeAt(0) - 97; // Convert 'a' to 0, 'b' to 1, etc.
+        const colorIndex = node.manual_override ? node.manual_override.charCodeAt(0) - 97 : null; // Convert 'a' to 0, 'b' to 1, etc.
         nodes.push({
           id: index,
           label: node.unique_id,
           colorIndex: colorIndex,
-          sourceDataset: node.source_dataset,
+          manual_override: node.manual_override,
           x: w / 2 + (Math.random() - 0.5) * 100,  // Random position near center
           y: h / 2 + (Math.random() - 0.5) * 100
         });
