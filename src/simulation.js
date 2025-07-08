@@ -11,6 +11,9 @@ export function init(d3_global, callback) {
     .force("x", d3.forceX(W / 2))
     .force("y", d3.forceY(H / 2))
     .on("tick", tick);
+
+  // NEW — expose the instance so other modules can pause/resume it
+  return simulation;
 }
 
 export function update(nodes, links) {

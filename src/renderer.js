@@ -3,12 +3,12 @@ import { W, H, RAD, COLORS, PROB_COLOR_SCALE } from './constants.js';
 let svg, edges, vertices, dragLine;
 
 // Callback functions to be set by other modules
-let onNodeClick = () => {};
-let onNodeContextMenu = () => {};
-let onNodeMouseDown = () => {};
-let onNodeMouseUp = () => {};
-let onEdgeContextMenu = () => {};
-let onEdgeMouseDown = () => {};
+let onNodeClick = () => { };
+let onNodeContextMenu = () => { };
+let onNodeMouseDown = () => { };
+let onNodeMouseUp = () => { };
+let onEdgeContextMenu = () => { };
+let onEdgeMouseDown = () => { };
 
 export function init(selector, eventCallbacks) {
   // Set up the main SVG
@@ -74,9 +74,10 @@ export function update(nodes, links) {
   vertices = vertices.data(nodes, d => d.id);
   vertices.exit().remove();
 
-  var enterVertices = vertices.enter()
+  const enterVertices = vertices.enter()
     .append("g")
-    .attr("class", "vertex-group");
+    .attr("class", "vertex-group")
+    .on("mouseup", onNodeMouseUp);   // <- attach to <g>, not just <circle>
 
   enterVertices.append("circle")
     .attr("r", RAD)

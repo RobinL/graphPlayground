@@ -5,6 +5,7 @@ let mouseupNode = null;
 let dragLine;
 
 let isDraggingProb = false;
+let sim; // <-- keep a reference to the force simulation
 let dragStartY;
 let dragStartProb;
 
@@ -19,6 +20,7 @@ export function init(d3_obj, svgElement, dragLineElement, dataModel, restartFn, 
   dragLine = dragLineElement; // Assign the passed-in element
   model = dataModel;
   restartCallback = restartFn;
+  sim = simulation_obj; // <-- save it for pausing/resuming
 
   svg.on("mousedown", () => {
     if (d3_global.event.button === 0) {
@@ -74,18 +76,31 @@ function resetMouseVar() {
 
 function hideDragLine() {
   dragLine.classed("hidden", true);
-  resetMouseVar();
-  restartCallback();
+  if (mousedownNode) {
+    // Safety-net: if the mouse is over *any* vertex when we release on the SVG,
+    // still create the link.
+    const [mx, my] = d3_global.mouse(svg.node());
+    const hit = model.nodes.find(
+      n => Math.hypot(n.x - mx, n.y - my) < 12 /*RAD + fudge*/);
+    if (hit && hit !== mousedownNode) {
+      model.addLink(mousedownNode, hit);
+      restartCallback();
+    }
+    mousedownNode = null;
+    resetMouseVar();
+    resumeSimulation();
+  }
 }
 
 export function beginDragLine(d) {
   d3_global.event.stopPropagation();
   d3_global.event.preventDefault();
-  if (d3_global.event.ctrlKey || d3_global.event.button != 0) return;
+  if (d3_global.event.ctrlKey || d3_global.event.button !== 0) return;
+  // --- NEW: freeze physics so nodes can’t run away -------------
+  sim.alphaTarget(0).stop();
   mousedownNode = d;
   dragLine.classed("hidden", false)
-    .attr("d", "M" + mousedownNode.x + "," + mousedownNode.y +
-      "L" + mousedownNode.x + "," + mousedownNode.y);
+    .attr("d", `M${d.x},${d.y}L${d.x},${d.y}`);
 }
 
 function updateDragLine() {
@@ -94,18 +109,31 @@ function updateDragLine() {
     "L" + d3_global.mouse(svg.node())[0] + "," + d3_global.mouse(svg.node())[1]);
 }
 
-export function endDragLine(d) {
-  if (!mousedownNode || mousedownNode === d) return;
-
-  model.addLink(mousedownNode, d);
+export function endDragLine(targetNode) {
+  if (!mousedownNode || mousedownNode === targetNode) {
+    if (mousedownNode) {
+      mousedownNode = null;
+      resetMouseVar();
+      resumeSimulation();
+    }
+    return;
+  }
+  model.addLink(mousedownNode, targetNode);
+  mousedownNode = null;
+  resetMouseVar();
   restartCallback();
+  resumeSimulation();
+}
+
+function resumeSimulation() {
+  sim.alpha(0.8).restart();
 }
 
 function keydown() {
   if (d3_global.event.key === "Meta") {
     d3_global.selectAll(".vertex-group").call(d3_global.drag()
       .on("start", function dragstarted(d) {
-        if (!d3_global.event.active) simulation_obj.alphaTarget(1).restart();
+        if (!d3_global.event.active) sim.alphaTarget(1).restart();
         d.fx = d.x;
         d.fy = d.y;
       })
@@ -114,7 +142,7 @@ function keydown() {
         d.fy = d3_global.event.y;
       })
       .on("end", function (d) {
-        if (!d3_global.event.active) simulation_obj.alphaTarget(0);
+        if (!d3_global.event.active) sim.alphaTarget(0);
         d.fx = null;
         d.fy = null;
       }));
@@ -128,9 +156,9 @@ export function keyup() {
 }
 
 export function beginProbabilityDrag(d, event) {
-    isDraggingProb = true;
-    dragStartY = event.y;
-    dragStartProb = d.probability;
-    d3_global.select(event.currentTarget).classed("active", true);
-    event.stopPropagation();
+  isDraggingProb = true;
+  dragStartY = event.y;
+  dragStartProb = d.probability;
+  d3_global.select(event.currentTarget).classed("active", true);
+  event.stopPropagation();
 }
