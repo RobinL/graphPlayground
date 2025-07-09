@@ -1,0 +1,173 @@
+body {
+  margin:0;
+  font-family: Helvetica, Arial;
+}
+
+a {
+  text-decoration: none;
+  color: #1f77b4;
+}
+
+p {
+  font-size: 16px;
+  color: #333;
+  line-height: 18px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+h1 {
+  margin-top: 20px;
+  font-size: 36px;
+  font-weight: 300;
+  color: #444;
+  text-align: center;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+b {
+  color: #d62828;
+}
+
+#container {
+  margin: auto;
+}
+
+#instructions {
+  margin-top:20px;
+  width: 700px;
+  margin: auto;
+}
+
+button {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  margin-top: 10px;
+  color: #333;
+}
+
+button:hover {
+  background-color: #ddd;
+}
+
+button:active {
+  background-color: #ccc;
+}
+
+#svg-wrap {
+  margin-top:10px;
+}
+
+#signature {
+  text-align: center;
+}
+
+/*graph styling*/
+svg {
+  cursor: crosshair;
+  display: block;
+  margin:auto;
+  border: 1px solid #eee;
+}
+
+.edge {
+  stroke: #888;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  cursor: ns-resize;
+}
+
+.edge.active {
+  stroke-width: 3px;
+}
+
+.edge:hover, .dragLine {
+  stroke: #333;
+  stroke-width: 3px;
+}
+
+.vertex {
+  cursor: pointer;
+}
+
+.vertex:hover {
+  stroke: #333;
+  opacity: 0.8;
+}
+
+.dragLine.hidden {
+  stroke-width:0;
+}
+
+.edge-text {
+  font-size: 10px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.vertex-group.dragging,
+.vertex-group.dragging * {
+  cursor: move !important;
+}
+
+/* Table styling for node and edge tables */
+#table-container {
+  width: 900px;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+}
+
+#table-container h2 {
+  font-size: 20px;
+  font-weight: normal;
+  color: #333;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+}
+
+th, td {
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:nth-child(odd) {
+  background-color: white;
+}
+
+/* Highlighting for manually overridden rows */
+tr.manual-override {
+  background-color: #fff3cd !important; /* Light yellow background */
+  border-left: 3px solid #ffc107; /* Yellow border on the left */
+}
+
