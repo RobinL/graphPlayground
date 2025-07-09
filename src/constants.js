@@ -16,6 +16,6 @@ export const PROB_COLOR_SCALE = d3.scaleLinear()
 export const FORCES = {
   CHARGE_STRENGTH: -300,
   CHARGE_MAX_DISTANCE: W / 2,
-  LINK_DISTANCE: d => d.probability === 0 ? 150 : 60,
-  LINK_STRENGTH: d => d.probability === 0 ? 0 : 1
+  LINK_DISTANCE: d => d.probability_inc_overrides === 0 ? 150 : 60,
+  LINK_STRENGTH: d => d.probability_inc_overrides === 0 ? 0 : 1
 };

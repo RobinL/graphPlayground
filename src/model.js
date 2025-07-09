@@ -7,9 +7,9 @@ export let nodes = [
   { id: 2, label: "3", colorIndex: null, manual_override: null },
 ];
 export let links = [
-  { source: 0, target: 2, edgeColorIndex: 0, probability: 0.9 },
-  { source: 0, target: 1, edgeColorIndex: 0, probability: 0.9 },
-  { source: 1, target: 2, edgeColorIndex: 0, probability: 0.9 },
+  { source: 0, target: 2, probability: 0.9, probability_inc_overrides: 0.9, automatic: false },
+  { source: 0, target: 1, probability: 0.9, probability_inc_overrides: 0.9, automatic: false },
+  { source: 1, target: 2, probability: 0.9, probability_inc_overrides: 0.9, automatic: false },
 ];
 
 let lastNodeId = nodes.length;
@@ -40,52 +40,58 @@ export function removeNode(nodeToRemove) {
 }
 
 export function generateAutomaticEdges() {
-  // Filter out previous automatic links. Manual links remain.
-  let currentLinks = links.filter(link => !link.automatic);
+  // 0.  Build a Map keyed by "id1-id2" (id order sorted) for O(1) look-ups
+  const id = (a, b) => a.id < b.id ? `${a.id}-${b.id}` : `${b.id}-${a.id}`;
+  const linkMap = new Map(links.map(l => [id(l.source, l.target), l]));
 
-  // Iterate over all pairs of nodes
-  for (let i = 0; i < nodes.length; i++) {
+  // 1.  For every *pair* of nodes decide what their override would be
+  const toAdd = [];       // brand-new automatic links
+  const toDelete = [];    // automatic links whose override vanished
+  nodes.forEach((n1, i) => {
     for (let j = i + 1; j < nodes.length; j++) {
-      const node1 = nodes[i];
-      const node2 = nodes[j];
+      const n2 = nodes[j];
+      const key = id(n1, n2);
+      const link = linkMap.get(key);
+      const bothHaveMO = n1.manual_override !== null && n2.manual_override !== null;
 
-      const override1 = node1.manual_override;
-      const override2 = node2.manual_override;
+      // Desired value given current overrides
+      let overrideProb = null;            // "null" means "no override in force"
+      if (bothHaveMO) overrideProb = (n1.manual_override === n2.manual_override ? 1 : 0);
 
-      // Only consider pairs where both have non-null manual_override values
-      if (override1 !== null && override2 !== null) {
-        let probability;
-        if (override1 === override2) {
-          probability = 1.0;
+      if (link) {
+        // -- (a) there *is* an existing link (manual or automatic)
+        if (overrideProb === null) {
+          // override vanished ➜ revert
+          if (link.automatic && link.probability === null) {
+            // It was a pure-override edge ➜ kill it
+            toDelete.push(link);
+          } else {
+            // Restore baseline
+            link.probability_inc_overrides = link.probability;
+            link.automatic = false;    // keep, but it's no longer auto
+          }
         } else {
-          probability = 0.0;
+          // override still in force ➜ just layer it
+          link.probability_inc_overrides = overrideProb;
+          link.automatic = true;
         }
-
-        // Find if a link (manual or automatic) already exists between these two nodes in the current set
-        let existingLink = currentLinks.find(link =>
-          (link.source === node1 && link.target === node2) ||
-          (link.source === node2 && link.target === node1)
-        );
-
-        if (existingLink) {
-          // If a link exists, update its probability and mark it as automatic
-          existingLink.probability = probability;
-          existingLink.automatic = true; // Mark it as automatic so it gets filtered next time
-        } else {
-          // If no link exists, create a new automatic one
-          currentLinks.push({
-            source: node1,
-            target: node2,
-            probability: probability,
-            automatic: true // Mark as an automatic edge
-          });
-        }
+      } else if (overrideProb !== null && overrideProb > 0) { // Only add links for prob > 0
+        // -- (b) no link yet but override demands one
+        toAdd.push({
+          source: n1,
+          target: n2,
+          probability: null,
+          probability_inc_overrides: overrideProb,
+          automatic: true
+        });
       }
     }
-  }
-  // Update the global links array with the new set of links
-  links.length = 0;
-  links.push(...currentLinks);
+  });
+
+  // 2. Commit mutations
+  //    (mutating 'links' in-place keeps refs that the rest of the app holds)
+  toDelete.forEach(l => links.splice(links.indexOf(l), 1));
+  links.push(...toAdd);
 }
 
 export function addLink(sourceNode, targetNode) {
@@ -96,7 +102,13 @@ export function addLink(sourceNode, targetNode) {
       return;
     }
   }
-  links.push({ source: sourceNode, target: targetNode, probability: 0.5 });
+  links.push({
+    source: sourceNode,
+    target: targetNode,
+    probability: 0.5,
+    probability_inc_overrides: 0.5,
+    automatic: false
+  });
 }
 
 export function removeLink(linkToRemove) {
@@ -112,10 +124,16 @@ export function clearGraph() {
   lastNodeId = 0;
 }
 
-// Normalize initial links to ensure they reference node objects, not just IDs
+// Normalize initial links to ensure they reference node objects and have the correct fields
 (function normaliseInitialLinks() {
   links.forEach(l => {
-    if (typeof l.source === 'number') l.source = nodes[l.source];
-    if (typeof l.target === 'number') l.target = nodes[l.target];
+    if (typeof l.source === 'number') l.source = nodes.find(n => n.id === l.source);
+    if (typeof l.target === 'number') l.target = nodes.find(n => n.id === l.target);
+    if (l.probability_inc_overrides === undefined) {
+      l.probability_inc_overrides = l.probability;
+    }
+    if (l.automatic === undefined) {
+      l.automatic = false;
+    }
   });
 })();

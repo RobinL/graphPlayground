@@ -18,10 +18,10 @@ function tick() {
 
 
 function restart() {
-  // 1 First finish constructing the final link array
+  // 1 First, apply overrides and generate/remove automatic edges.
   model.generateAutomaticEdges();              // <- must run FIRST
 
-  // 2 Now every link has proper objects, hand it to the force engine
+  // 2 Now every link has a final `probability_inc_overrides`, hand it to the force engine
   simulation.update(model.nodes, model.links); // <- then run the sim
 
   // Tell the renderer to redraw everything
@@ -36,9 +36,17 @@ const eventCallbacks = {
     if (d.colorIndex === null) {
       d.colorIndex = 0;
     } else {
-      d.colorIndex = (d.colorIndex + 1) % 5;
+      d.colorIndex = (d.colorIndex + 1);
     }
-    d.manual_override = String.fromCharCode(97 + d.colorIndex);
+
+    if (d.colorIndex >= COLORS.length) {
+      d.colorIndex = null;
+      d.manual_override = null;
+    } else {
+      d.manual_override = String.fromCharCode(97 + d.colorIndex);
+    }
+
+    // Using a timeout defers the restart, letting the event bubble up cleanly.
     setTimeout(() => {
       restart();
     }, 0);

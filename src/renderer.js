@@ -62,11 +62,11 @@ export function update(nodes, links) {
   edges = edgeGroups.merge(edges);
 
   edges.select("line")
-    .style("stroke", d => PROB_COLOR_SCALE(d.probability));
+    .style("stroke", d => PROB_COLOR_SCALE(d.probability_inc_overrides));
 
   edges.select("text")
-    .text(d => d.probability.toFixed(2))
-    .style("fill", d => PROB_COLOR_SCALE(d.probability));
+    .text(d => d.probability_inc_overrides.toFixed(2))
+    .style("fill", d => PROB_COLOR_SCALE(d.probability_inc_overrides));
 
   // === VERTICES ===
   vertices = vertices.data(nodes, d => d.id);

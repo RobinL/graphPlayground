@@ -1,4 +1,5 @@
 import * as importExport from './importExport.js';
+import { W, H } from './constants.js'; // Import W and H
 
 let restartCallback;
 let d3_global;
@@ -68,38 +69,39 @@ export function init(d3_obj, model_obj, restartFn) {
           graphData = JSON.parse(match[1]);
         }
 
-        // Validate the structure
         if (!graphData.nodes || !graphData.links ||
           !Array.isArray(graphData.nodes) || !Array.isArray(graphData.links)) {
           throw new Error("Input must contain 'nodes' and 'links' arrays");
         }
 
-        // Clear existing graph
-        _model.nodes.splice(0);
-        _model.links.splice(0);
+        _model.clearGraph();
 
-        // Add new nodes
         graphData.nodes.forEach((node, index) => {
-          const colorIndex = node.manual_override ? node.manual_override.charCodeAt(0) - 97 : null; // Convert 'a' to 0, 'b' to 1, etc.
+          const colorIndex = node.manual_override ? node.manual_override.charCodeAt(0) - 97 : null;
           _model.nodes.push({
             id: index,
             label: node.unique_id,
             colorIndex: colorIndex,
             manual_override: node.manual_override,
-            x: W / 2 + (Math.random() - 0.5) * 100,  // Random position near center
+            x: W / 2 + (Math.random() - 0.5) * 100,
             y: H / 2 + (Math.random() - 0.5) * 100
           });
         });
 
-        // Add new links
+        // This is a temporary map to look up nodes by their unique_id label
+        const nodeMap = new Map(_model.nodes.map(n => [n.label, n]));
+
         graphData.links.forEach(link => {
-          const sourceNode = _model.nodes.find(n => n.label === link.unique_id_l);
-          const targetNode = _model.nodes.find(n => n.label === link.unique_id_r);
+          const sourceNode = nodeMap.get(link.unique_id_l);
+          const targetNode = nodeMap.get(link.unique_id_r);
           if (sourceNode && targetNode) {
+            const baseline = ('match_probability' in link) ? link.match_probability : null;
             _model.links.push({
               source: sourceNode,
               target: targetNode,
-              probability: link.match_probability
+              probability: baseline,
+              probability_inc_overrides: baseline, // Initially same as baseline
+              automatic: false
             });
           }
         });
@@ -107,7 +109,6 @@ export function init(d3_obj, model_obj, restartFn) {
         _model.lastNodeId = _model.nodes.length;
         restartCallback();
 
-        // Close the details panel after successful load
         details.node().open = false;
       } catch (e) {
         console.error("Error importing graph:", e);
@@ -144,7 +145,6 @@ export function init(d3_obj, model_obj, restartFn) {
     .style("width", "100%")
     .style("margin-top", "30px");
 
-  // Initial update
   updateTextarea();
 }
 

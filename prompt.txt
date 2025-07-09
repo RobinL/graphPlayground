@@ -1,0 +1,1011 @@
+./README.md
+---
+
+
+---
+./index.html
+---
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Construct simple graphs.">
+  <meta name="author" content="Avinash Pandey">
+  <title>Graph Playground</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js
+
+
+
+"></script>
+</head>
+
+<body>
+  <a href="https://github.com/mrpandey/graphPlayground"><img style="position: absolute; top: 0; right: 0; border: 0;"
+      src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png" alt="Fork me on GitHub"></a>
+  <div id="container">
+    <h1>Graph Playground</h1>
+    <hr>
+    <div id="instructions" style="text-align: center;">
+      <p>
+        To add a vertex <b>left click</b> on whitespace.
+        To add an edge <b>drag</b> from one vertex to another.
+        To delete a vertex or edge <b>right click</b> on it.
+        To change the color of an edge or vertex, <b>click</b> on it.
+        To adjust edge probability, <b>click and drag up/down</b> on the edge.
+      </p>
+    </div>
+
+    <div style="text-align: center;">
+      <button type="button" id="clear">Clear All</button>
+    </div>
+    <div id="svg-wrap">
+    </div>
+    <hr>
+    <div id="signature">
+      <p>Made by Avinash Pandey, adapted by Robin</p>
+      <p>Based on <a href="http://bl.ocks.org/rkirsling/5001347">Directed Graph Editor</a> by
+        <a href="https://github.com/rkirsling">rkirsling</a>
+      </p>
+    </div>
+  </div>
+</body>
+<!-- We'll keep the D3 CDN link, but remove the local copy -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
+<script type="module" src="src/main.js"></script>
+
+</html>
+
+---
+./prompt.txt
+---
+./README.md
+---
+
+
+---
+./index.html
+---
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Construct simple graphs.">
+  <meta name="author" content="Avinash Pandey">
+  <title>Graph Playground</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js
+
+
+
+"></script>
+</head>
+
+<body>
+  <a href="https://github.com/mrpandey/graphPlayground"><img style="position: absolute; top: 0; right: 0; border: 0;"
+      src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png" alt="Fork me on GitHub"></a>
+  <div id="container">
+    <h1>Graph Playground</h1>
+    <hr>
+    <div id="instructions" style="text-align: center;">
+      <p>
+        To add a vertex <b>left click</b> on whitespace.
+        To add an edge <b>drag</b> from one vertex to another.
+        To delete a vertex or edge <b>right click</b> on it.
+        To change the color of an edge or vertex, <b>click</b> on it.
+        To adjust edge probability, <b>click and drag up/down</b> on the edge.
+      </p>
+    </div>
+
+    <div style="text-align: center;">
+      <button type="button" id="clear">Clear All</button>
+    </div>
+    <div id="svg-wrap">
+    </div>
+    <hr>
+    <div id="signature">
+      <p>Made by Avinash Pandey, adapted by Robin</p>
+      <p>Based on <a href="http://bl.ocks.org/rkirsling/5001347">Directed Graph Editor</a> by
+        <a href="https://github.com/rkirsling">rkirsling</a>
+      </p>
+    </div>
+  </div>
+</body>
+<!-- We'll keep the D3 CDN link, but remove the local copy -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
+<script type="module" src="src/main.js"></script>
+
+</html>
+
+---
+
+
+---
+./css/style.css
+---
+body {
+  margin:0;
+  font-family: Helvetica, Arial;
+}
+
+a {
+  text-decoration: none;
+  color: #1f77b4;
+}
+
+p {
+  font-size: 16px;
+  color: #333;
+  line-height: 18px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+h1 {
+  margin-top: 20px;
+  font-size: 36px;
+  font-weight: 300;
+  color: #444;
+  text-align: center;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+b {
+  color: #d62828;
+}
+
+#container {
+  margin: auto;
+}
+
+#instructions {
+  margin-top:20px;
+  width: 700px;
+  margin: auto;
+}
+
+button {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  margin-top: 10px;
+  color: #333;
+}
+
+button:hover {
+  background-color: #ddd;
+}
+
+button:active {
+  background-color: #ccc;
+}
+
+#svg-wrap {
+  margin-top:10px;
+}
+
+#signature {
+  text-align: center;
+}
+
+/*graph styling*/
+svg {
+  cursor: crosshair;
+  display: block;
+  margin:auto;
+  border: 1px solid #eee;
+}
+
+.edge {
+  stroke: #888;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  cursor: ns-resize;
+}
+
+.edge.active {
+  stroke-width: 3px;
+}
+
+.edge:hover, .dragLine {
+  stroke: #333;
+  stroke-width: 3px;
+}
+
+.vertex {
+  cursor: pointer;
+}
+
+.vertex:hover {
+  stroke: #333;
+  opacity: 0.8;
+}
+
+.dragLine.hidden {
+  stroke-width:0;
+}
+
+.edge-text {
+  font-size: 10px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+---
+./src/constants.js
+---
+// Tunable constants & colour palettes
+
+export const COLORS = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
+
+const viewWid = document.documentElement.clientWidth;
+export const W = viewWid > 1200 ? 900 : 700;
+export const H = W === 900 ? 600 : 500;
+export const RAD = 10;
+
+// Color scale for edge probability
+export const PROB_COLOR_SCALE = d3.scaleLinear()
+  .domain([0, 0.5, 1])
+  .range(["red", "orange", "green"]);
+
+// Force simulation constants
+export const FORCES = {
+  CHARGE_STRENGTH: -300,
+  CHARGE_MAX_DISTANCE: W / 2,
+  LINK_DISTANCE: d => d.probability === 0 ? 150 : 60,
+  LINK_STRENGTH: d => d.probability === 0 ? 0 : 1
+};
+
+---
+./src/importExport.js
+---
+import * as model from './model.js';
+
+export function getGraphData(model_obj) {
+  const formattedNodes = model_obj.nodes.map(node => ({
+    unique_id: node.label,
+    manual_override: node.manual_override
+  }));
+
+  const formattedLinks = model_obj.links.map(link => ({
+    unique_id_l: link.source.label,
+    manual_override_l: link.source.manual_override,
+    unique_id_r: link.target.label,
+    manual_override_r: link.target.manual_override,
+    match_probability: link.probability
+  }));
+
+  return {
+    nodes: formattedNodes,
+    links: formattedLinks
+  };
+}
+
+export function generatePythonCode(model_obj) {
+  const graphData = getGraphData(model_obj);
+
+  // Output as pure JSON that can be loaded with json.loads
+  return `import pandas as pd
+import json
+
+# Load the graph data
+graph_data = json.loads('''
+${JSON.stringify(graphData, null, 2)}
+''')
+
+nodes_df = pd.DataFrame(graph_data["nodes"])
+links_df = pd.DataFrame(graph_data["links"])
+`;
+}
+
+---
+./src/interactions.js
+---
+import { PROB_COLOR_SCALE } from './constants.js';
+
+let mousedownNode = null;
+let mouseupNode = null;
+let dragLine;
+
+let isDraggingProb = false;
+let sim; // Reference to the force simulation
+let dragStartY;
+let dragStartProb;
+
+let svg;
+let model;
+let restartCallback;
+let d3_global;
+
+export function init(d3_obj, svgElement, dragLineElement, dataModel, restartFn, simulation_obj) {
+  d3_global = d3_obj;
+  svg = svgElement;
+  dragLine = dragLineElement;
+  model = dataModel;
+  restartCallback = restartFn;
+  sim = simulation_obj; // Store for pausing/resuming
+
+  svg.on("mousedown", () => {
+    if (d3_global.event.button === 0) {
+      model.addNode(d3_global.mouse(svg.node()));
+      restartCallback();
+    }
+  })
+    .on("mousemove", updateDragLine)
+    .on("mouseup", hideDragLine)
+    .on("contextmenu", function () { d3_global.event.preventDefault(); })
+    .on("mouseleave", hideDragLine)
+    .on("mousemove.prob", function () {
+      if (isDraggingProb) {
+        let dy = d3_global.event.y - dragStartY;
+        let probChange = -dy * 0.001;
+
+        d3_global.selectAll(".edge-group line.active").each(function (d) {
+          d.probability = Math.min(1, Math.max(0, Math.round((dragStartProb + probChange) * 100) / 100));
+          let parentGroup = d3_global.select(this.parentNode);
+          parentGroup.select("text")
+            .text(d.probability.toFixed(2));
+          d3_global.select(this).style("stroke", PROB_COLOR_SCALE(d.probability));
+          parentGroup.select("text").style("fill", PROB_COLOR_SCALE(d.probability));
+        });
+      }
+    })
+    .on("mouseup.prob", function () {
+      isDraggingProb = false;
+      d3_global.selectAll(".edge-group line").classed("active", false);
+    })
+    .on("mouseleave.prob", function () {
+      if (isDraggingProb) {
+        isDraggingProb = false;
+        d3_global.selectAll(".edge-group line").classed("active", false);
+      }
+    });
+
+  d3_global.select(window)
+    .on('keydown', keydown)
+    .on('keyup', keyup);
+
+  d3_global.select("#clear")
+    .on('click', function () {
+      model.clearGraph();
+      restartCallback();
+    });
+}
+
+function resetMouseVar() {
+  mousedownNode = null;
+  mouseupNode = null;
+}
+
+function hideDragLine() {
+  dragLine.classed("hidden", true);
+  if (mousedownNode) {
+    // Safety-net: if the mouse is over *any* vertex when we release on the SVG,
+    // still create the link.
+    const [mx, my] = d3_global.mouse(svg.node());
+    const hit = model.nodes.find(
+      n => Math.hypot(n.x - mx, n.y - my) < 12);
+    if (hit && hit !== mousedownNode) {
+      model.addLink(mousedownNode, hit);
+      restartCallback();
+    }
+    mousedownNode = null;
+    resetMouseVar();
+    resumeSimulation();
+  }
+}
+
+export function beginDragLine(d) {
+  d3_global.event.stopPropagation();
+  d3_global.event.preventDefault();
+  if (d3_global.event.ctrlKey || d3_global.event.button !== 0) return;
+  sim.alphaTarget(0).stop();
+  mousedownNode = d;
+  dragLine.classed("hidden", false)
+    .attr("d", `M${d.x},${d.y}L${d.x},${d.y}`);
+}
+
+function updateDragLine() {
+  if (!mousedownNode) return;
+  dragLine.attr("d", "M" + mousedownNode.x + "," + mousedownNode.y +
+    "L" + d3_global.mouse(svg.node())[0] + "," + d3_global.mouse(svg.node())[1]);
+}
+
+export function endDragLine(targetNode) {
+  if (!mousedownNode || mousedownNode === targetNode) {
+    if (mousedownNode) {
+      mousedownNode = null;
+      resetMouseVar();
+      resumeSimulation();
+    }
+    return;
+  }
+  model.addLink(mousedownNode, targetNode);
+  mousedownNode = null;
+  resetMouseVar();
+  restartCallback();
+  resumeSimulation();
+}
+
+function resumeSimulation() {
+  sim.alpha(0.8).restart();
+}
+
+function keydown() {
+  if (d3_global.event.key === "Meta") {
+    d3_global.selectAll(".vertex-group").call(d3_global.drag()
+      .on("start", function dragstarted(d) {
+        if (!d3_global.event.active) sim.alphaTarget(1).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      })
+      .on("drag", function (d) {
+        d.fx = d3_global.event.x;
+        d.fy = d3_global.event.y;
+      })
+      .on("end", function (d) {
+        if (!d3_global.event.active) sim.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }));
+  }
+}
+
+export function keyup() {
+  if (d3_global.event.key === "Meta") {
+    d3_global.selectAll(".vertex-group circle").on("mousedown.drag", null);
+  }
+}
+
+export function beginProbabilityDrag(d, event) {
+  isDraggingProb = true;
+  dragStartY = event.y;
+  dragStartProb = d.probability;
+  d3_global.select(event.currentTarget).classed("active", true);
+  event.stopPropagation();
+}
+
+---
+./src/main.js
+---
+import { COLORS, W, H, RAD, PROB_COLOR_SCALE, FORCES } from './constants.js';
+import * as model from './model.js';
+import * as renderer from './renderer.js';
+import * as simulation from './simulation.js';
+import * as interactions from './interactions.js';
+import * as ui from './ui.js';
+import * as importExport from './importExport.js';
+
+// Global D3 object (loaded from CDN in index.html)
+
+
+
+
+function tick() {
+  renderer.updatePositions();
+}
+
+
+
+function restart() {
+  // 1 First finish constructing the final link array
+  model.generateAutomaticEdges();              // <- must run FIRST
+
+  // 2 Now every link has proper objects, hand it to the force engine
+  simulation.update(model.nodes, model.links); // <- then run the sim
+
+  // Tell the renderer to redraw everything
+  renderer.update(model.nodes, model.links);
+  ui.updateTextarea();
+}
+
+// Event callbacks for the renderer
+const eventCallbacks = {
+  onNodeClick: (d) => {
+    d3.event.stopPropagation();
+    if (d.colorIndex === null) {
+      d.colorIndex = 0;
+    } else {
+      d.colorIndex = (d.colorIndex + 1) % 5;
+    }
+    d.manual_override = String.fromCharCode(97 + d.colorIndex);
+    setTimeout(() => {
+      restart();
+    }, 0);
+  },
+  onNodeContextMenu: (d) => {
+    if (d3.event.ctrlKey) return;
+    d3.event.preventDefault();
+    model.removeNode(d);
+    restart();
+  },
+  onEdgeContextMenu: (d) => {
+    d3.event.preventDefault();
+    model.removeLink(d);
+    restart();
+  },
+  onNodeMouseDown: interactions.beginDragLine,
+  onNodeMouseUp: interactions.endDragLine,
+  onEdgeMouseDown: (d) => {
+    interactions.beginProbabilityDrag(d, d3.event);
+  }
+};
+
+// Initialize the renderer
+const { svg, dragLine } = renderer.init("#svg-wrap", eventCallbacks);
+
+// Initialize the simulation and hold on to the instance
+const forceSim = simulation.init(d3, tick);
+
+// Initialize interactions
+interactions.init(d3, svg, dragLine, model, restart, forceSim);
+
+// Initialize UI
+ui.init(d3, model, restart);
+
+// Initial call to restart
+restart();
+ui.updateTextarea(model);
+
+---
+./src/model.js
+---
+// In‑memory graph data + pure helpers
+
+// The core data
+export let nodes = [
+  { id: 0, label: "1", colorIndex: null, manual_override: null },
+  { id: 1, label: "2", colorIndex: null, manual_override: null },
+  { id: 2, label: "3", colorIndex: null, manual_override: null },
+];
+export let links = [
+  { source: 0, target: 2, edgeColorIndex: 0, probability: 0.9 },
+  { source: 0, target: 1, edgeColorIndex: 0, probability: 0.9 },
+  { source: 1, target: 2, edgeColorIndex: 0, probability: 0.9 },
+];
+
+let lastNodeId = nodes.length;
+
+// Functions to manipulate the model
+export function addNode(coords) {
+  const label = (lastNodeId + 1).toString();
+  const newNode = {
+    id: ++lastNodeId,
+    label: label,
+    colorIndex: null,
+    manual_override: null,
+    x: coords[0],
+    y: coords[1]
+  };
+  nodes.push(newNode);
+}
+
+export function removeNode(nodeToRemove) {
+  const index = nodes.indexOf(nodeToRemove);
+  if (index > -1) {
+    nodes.splice(index, 1);
+    // Filter out links connected to the removed node
+    const linksToKeep = links.filter(l => l.source !== nodeToRemove && l.target !== nodeToRemove);
+    links.length = 0;
+    links.push(...linksToKeep); // Add the filtered links back
+  }
+}
+
+export function generateAutomaticEdges() {
+  // Filter out previous automatic links. Manual links remain.
+  let currentLinks = links.filter(link => !link.automatic);
+
+  // Iterate over all pairs of nodes
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const node1 = nodes[i];
+      const node2 = nodes[j];
+
+      const override1 = node1.manual_override;
+      const override2 = node2.manual_override;
+
+      // Only consider pairs where both have non-null manual_override values
+      if (override1 !== null && override2 !== null) {
+        let probability;
+        if (override1 === override2) {
+          probability = 1.0;
+        } else {
+          probability = 0.0;
+        }
+
+        // Find if a link (manual or automatic) already exists between these two nodes in the current set
+        let existingLink = currentLinks.find(link =>
+          (link.source === node1 && link.target === node2) ||
+          (link.source === node2 && link.target === node1)
+        );
+
+        if (existingLink) {
+          // If a link exists, update its probability and mark it as automatic
+          existingLink.probability = probability;
+          existingLink.automatic = true; // Mark it as automatic so it gets filtered next time
+        } else {
+          // If no link exists, create a new automatic one
+          currentLinks.push({
+            source: node1,
+            target: node2,
+            probability: probability,
+            automatic: true // Mark as an automatic edge
+          });
+        }
+      }
+    }
+  }
+  // Update the global links array with the new set of links
+  links.length = 0;
+  links.push(...currentLinks);
+}
+
+export function addLink(sourceNode, targetNode) {
+  // Return if link already exists
+  for (let i = 0; i < links.length; i++) {
+    const l = links[i];
+    if ((l.source === sourceNode && l.target === targetNode) || (l.source === targetNode && l.target === sourceNode)) {
+      return;
+    }
+  }
+  links.push({ source: sourceNode, target: targetNode, probability: 0.5 });
+}
+
+export function removeLink(linkToRemove) {
+  const index = links.indexOf(linkToRemove);
+  if (index > -1) {
+    links.splice(index, 1);
+  }
+}
+
+export function clearGraph() {
+  nodes.length = 0;
+  links.length = 0;
+  lastNodeId = 0;
+}
+
+// Normalize initial links to ensure they reference node objects, not just IDs
+(function normaliseInitialLinks() {
+  links.forEach(l => {
+    if (typeof l.source === 'number') l.source = nodes[l.source];
+    if (typeof l.target === 'number') l.target = nodes[l.target];
+  });
+})();
+
+---
+./src/renderer.js
+---
+import { W, H, RAD, COLORS, PROB_COLOR_SCALE } from './constants.js';
+
+let svg, edges, vertices, dragLine;
+
+// Callback functions to be set by other modules
+let onNodeClick = () => { };
+let onNodeContextMenu = () => { };
+let onNodeMouseDown = () => { };
+let onNodeMouseUp = () => { };
+let onEdgeContextMenu = () => { };
+let onEdgeMouseDown = () => { };
+
+export function init(selector, eventCallbacks) {
+  // Set up the main SVG
+  svg = d3.select(selector)
+    .append("svg")
+    .attr("width", W)
+    .attr("height", H);
+
+  document.getElementById("container").style.width = "" + W + "px";
+
+  // Define groups for edges and vertices
+  edges = svg.append("g").selectAll(".edge");
+  vertices = svg.append("g").selectAll(".vertex");
+
+  dragLine = svg.append("path")
+    .attr("class", "dragLine hidden")
+    .attr("d", "M0,0L0,0");
+
+  // Assign callbacks
+  onNodeClick = eventCallbacks.onNodeClick;
+  onNodeContextMenu = eventCallbacks.onNodeContextMenu;
+  onNodeMouseDown = eventCallbacks.onNodeMouseDown;
+  onNodeMouseUp = eventCallbacks.onNodeMouseUp;
+  onEdgeContextMenu = eventCallbacks.onEdgeContextMenu;
+  onEdgeMouseDown = eventCallbacks.onEdgeMouseDown;
+
+  return { svg, dragLine };
+}
+
+export function update(nodes, links) {
+  // === EDGES ===
+  edges = edges.data(links, d => `v${d.source.id}-v${d.target.id}`);
+  edges.exit().remove();
+
+  var edgeGroups = edges.enter()
+    .append("g")
+    .attr("class", "edge-group");
+
+  edgeGroups.append("line")
+    .attr("class", "edge")
+    .on("mousedown", () => d3.event.stopPropagation())
+    .on("contextmenu", onEdgeContextMenu)
+    .on("mousedown.prob", onEdgeMouseDown);
+
+  edgeGroups.append("text")
+    .attr("class", "edge-text")
+    .attr("text-anchor", "middle")
+    .style("pointer-events", "none")
+    .style("user-select", "none");
+
+  edges = edgeGroups.merge(edges);
+
+  edges.select("line")
+    .style("stroke", d => PROB_COLOR_SCALE(d.probability));
+
+  edges.select("text")
+    .text(d => d.probability.toFixed(2))
+    .style("fill", d => PROB_COLOR_SCALE(d.probability));
+
+  // === VERTICES ===
+  vertices = vertices.data(nodes, d => d.id);
+  vertices.exit().remove();
+
+  const enterVertices = vertices.enter()
+    .append("g")
+    .attr("class", "vertex-group")
+    .on("mouseup", onNodeMouseUp);   // <- attach to <g>, not just <circle>
+
+  enterVertices.append("circle")
+    .attr("r", RAD)
+    .on("mousedown", onNodeMouseDown)
+    .on("mouseup", onNodeMouseUp)
+    .on("contextmenu", onNodeContextMenu)
+    .on("click", onNodeClick);
+
+  // Add text layers for outline effect
+  enterVertices.append("text")
+    .attr("text-anchor", "middle")
+    .attr("dy", ".35em")
+    .style("pointer-events", "none")
+    .style("stroke", "white")
+    .style("stroke-width", "2px");
+
+  enterVertices.append("text")
+    .attr("text-anchor", "middle")
+    .attr("dy", ".35em")
+    .style("pointer-events", "none")
+    .style("fill", "black");
+
+  vertices = enterVertices.merge(vertices);
+
+  vertices.select("circle")
+    .style("fill", d => d.colorIndex === null ? 'grey' : COLORS[d.colorIndex % 5]);
+
+  vertices.selectAll("text")
+    .text(d => d.label);
+}
+
+// Function to update element positions during simulation ticks
+export function updatePositions() {
+  edges.select("line")
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
+
+  edges.select("text")
+    .attr("x", d => (d.source.x + d.target.x) / 2)
+    .attr("y", d => (d.source.y + d.target.y) / 2 - 5);
+
+  vertices.attr("transform", d => `translate(${d.x},${d.y})`);
+}
+
+---
+./src/simulation.js
+---
+import { FORCES, W, H } from './constants.js';
+
+let simulation;
+let tickCallback;
+
+export function init(d3_global, callback) {
+  tickCallback = callback;
+  simulation = d3_global.forceSimulation()
+    .force("charge", d3.forceManyBody().strength(FORCES.CHARGE_STRENGTH).distanceMax(FORCES.CHARGE_MAX_DISTANCE))
+    .force("link", d3.forceLink().distance(FORCES.LINK_DISTANCE).strength(FORCES.LINK_STRENGTH))
+    .force("x", d3.forceX(W / 2))
+    .force("y", d3.forceY(H / 2))
+    .on("tick", tick);
+
+  return simulation;
+}
+
+export function update(nodes, links) {
+  simulation.nodes(nodes);
+  simulation.force("link").links(links);
+  simulation.alpha(0.8).restart();
+}
+
+function tick() {
+  tickCallback();
+}
+
+---
+./src/ui.js
+---
+import * as importExport from './importExport.js';
+
+let restartCallback;
+let d3_global;
+let textarea;
+let _model; // Declare module-level variable
+
+export function init(d3_obj, model_obj, restartFn) {
+  d3_global = d3_obj;
+  _model = model_obj; // Assign model_obj to _model
+  restartCallback = restartFn;
+
+  // Remove the old button and add textarea + copy button
+  d3_global.select("#dump-data").remove();
+
+  const controlsDiv = d3_global.select("#container")
+    .append("div")
+    .style("margin-top", "20px")
+    .style("position", "relative");  // Add relative positioning
+
+  // Create details/summary for input
+  const details = controlsDiv.append("details")
+    .style("margin-bottom", "20px");
+
+  details.append("summary")
+    .text("Import Graph Data")
+    .style("cursor", "pointer")
+    .style("padding", "10px")
+    .style("background-color", "#f5f5f5")
+    .style("border", "1px solid #ddd")
+    .style("border-radius", "4px");
+
+  const inputDiv = details.append("div")
+    .style("margin", "10px 0")
+    .style("padding", "10px")
+    .style("border", "1px solid #ddd")
+    .style("border-radius", "4px");
+
+  // Add input textarea
+  const inputTextarea = inputDiv.append("textarea")
+    .attr("id", "graph-data-input")
+    .attr("rows", "15")
+    .attr("cols", "80")
+    .attr("placeholder", "Paste your graph_data here in same json format as the output below...")
+    .style("font-family", "monospace")
+    .style("width", "100%")
+    .style("margin-bottom", "10px");
+
+  // Add load button below textarea
+  inputDiv.append("button")
+    .text("Load Graph")
+    .style("display", "block")
+    .style("margin", "10px 0")
+    .on("click", function () {
+      try {
+        const inputText = inputTextarea.node().value;
+        let graphData;
+
+        try {
+          // First try parsing as pure JSON
+          graphData = JSON.parse(inputText);
+        } catch (e) {
+          // If that fails, try extracting JSON from Python code
+          const match = inputText.match(/json\.loads\(\s*'''([\s\S]*?)'''\s*\)/);
+          if (!match) {
+            throw new Error("Could not find valid JSON or Python json.loads format in input");
+          }
+          graphData = JSON.parse(match[1]);
+        }
+
+        // Validate the structure
+        if (!graphData.nodes || !graphData.links ||
+          !Array.isArray(graphData.nodes) || !Array.isArray(graphData.links)) {
+          throw new Error("Input must contain 'nodes' and 'links' arrays");
+        }
+
+        // Clear existing graph
+        _model.nodes.splice(0);
+        _model.links.splice(0);
+
+        // Add new nodes
+        graphData.nodes.forEach((node, index) => {
+          const colorIndex = node.manual_override ? node.manual_override.charCodeAt(0) - 97 : null; // Convert 'a' to 0, 'b' to 1, etc.
+          _model.nodes.push({
+            id: index,
+            label: node.unique_id,
+            colorIndex: colorIndex,
+            manual_override: node.manual_override,
+            x: W / 2 + (Math.random() - 0.5) * 100,  // Random position near center
+            y: H / 2 + (Math.random() - 0.5) * 100
+          });
+        });
+
+        // Add new links
+        graphData.links.forEach(link => {
+          const sourceNode = _model.nodes.find(n => n.label === link.unique_id_l);
+          const targetNode = _model.nodes.find(n => n.label === link.unique_id_r);
+          if (sourceNode && targetNode) {
+            _model.links.push({
+              source: sourceNode,
+              target: targetNode,
+              probability: link.match_probability
+            });
+          }
+        });
+
+        _model.lastNodeId = _model.nodes.length;
+        restartCallback();
+
+        // Close the details panel after successful load
+        details.node().open = false;
+      } catch (e) {
+        console.error("Error importing graph:", e);
+        alert("Error importing graph: " + e.message);
+      }
+    });
+
+  // Output textarea section
+  const outputDiv = controlsDiv.append("div")
+    .style("position", "relative")
+    .style("margin-top", "20px");
+
+  outputDiv.append("button")
+    .text("Copy to Clipboard")
+    .style("position", "absolute")
+    .style("top", "0")
+    .style("right", "0")
+    .style("z-index", "1")
+    .on("click", function () {
+      textarea.node().select();
+      document.execCommand('copy');
+      const originalText = this.textContent;
+      this.textContent = "Copied!";
+      setTimeout(() => {
+        this.textContent = originalText;
+      }, 1500);
+    });
+
+  textarea = outputDiv.append("textarea")
+    .attr("id", "graph-data")
+    .attr("rows", "30")
+    .attr("cols", "80")
+    .style("font-family", "monospace")
+    .style("width", "100%")
+    .style("margin-top", "30px");
+
+  // Initial update
+  updateTextarea();
+}
+
+export function updateTextarea() {
+  textarea.text(importExport.generatePythonCode(_model));
+}
+
+---

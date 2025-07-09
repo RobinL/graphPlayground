@@ -38,23 +38,34 @@ export function init(d3_obj, svgElement, dragLineElement, dataModel, restartFn, 
         let probChange = -dy * 0.001;
 
         d3_global.selectAll(".edge-group line.active").each(function (d) {
-          d.probability = Math.min(1, Math.max(0, Math.round((dragStartProb + probChange) * 100) / 100));
+          const newProb = Math.min(1, Math.max(0, Math.round((dragStartProb + probChange) * 100) / 100));
+
+          // Update baseline probability
+          d.probability = newProb;
+          // Keep effective probability in sync for live feedback
+          d.probability_inc_overrides = newProb;
+
           let parentGroup = d3_global.select(this.parentNode);
           parentGroup.select("text")
-            .text(d.probability.toFixed(2));
-          d3_global.select(this).style("stroke", PROB_COLOR_SCALE(d.probability));
-          parentGroup.select("text").style("fill", PROB_COLOR_SCALE(d.probability));
+            .text(d.probability_inc_overrides.toFixed(2));
+          d3_global.select(this).style("stroke", PROB_COLOR_SCALE(d.probability_inc_overrides));
+          parentGroup.select("text").style("fill", PROB_COLOR_SCALE(d.probability_inc_overrides));
         });
       }
     })
     .on("mouseup.prob", function () {
-      isDraggingProb = false;
-      d3_global.selectAll(".edge-group line").classed("active", false);
+      if (isDraggingProb) {
+        isDraggingProb = false;
+        d3_global.selectAll(".edge-group line").classed("active", false);
+        // Call restart to re-apply any active overrides that might have been temporarily ignored during the drag
+        restartCallback();
+      }
     })
     .on("mouseleave.prob", function () {
       if (isDraggingProb) {
         isDraggingProb = false;
         d3_global.selectAll(".edge-group line").classed("active", false);
+        restartCallback();
       }
     });
 
@@ -77,8 +88,6 @@ function resetMouseVar() {
 function hideDragLine() {
   dragLine.classed("hidden", true);
   if (mousedownNode) {
-    // Safety-net: if the mouse is over *any* vertex when we release on the SVG,
-    // still create the link.
     const [mx, my] = d3_global.mouse(svg.node());
     const hit = model.nodes.find(
       n => Math.hypot(n.x - mx, n.y - my) < 12);
@@ -157,6 +166,11 @@ export function keyup() {
 export function beginProbabilityDrag(d, event) {
   isDraggingProb = true;
   dragStartY = event.y;
+
+  // If the link has no baseline prob, it was purely automatic. Give it one.
+  if (d.probability === null) {
+    d.probability = d.probability_inc_overrides;
+  }
   dragStartProb = d.probability;
   d3_global.select(event.currentTarget).classed("active", true);
   event.stopPropagation();

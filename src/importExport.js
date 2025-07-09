@@ -6,13 +6,15 @@ export function getGraphData(model_obj) {
     manual_override: node.manual_override
   }));
 
-  const formattedLinks = model_obj.links.map(link => ({
-    unique_id_l: link.source.label,
-    manual_override_l: link.source.manual_override,
-    unique_id_r: link.target.label,
-    manual_override_r: link.target.manual_override,
-    match_probability: link.probability
-  }));
+  const formattedLinks = model_obj.links
+    .filter(link => !link.automatic) // Only export non-automatic links
+    .map(link => ({
+      unique_id_l: link.source.label,
+      manual_override_l: link.source.manual_override,
+      unique_id_r: link.target.label,
+      manual_override_r: link.target.manual_override,
+      match_probability: link.probability
+    }));
 
   return {
     nodes: formattedNodes,
