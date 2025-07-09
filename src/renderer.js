@@ -62,11 +62,13 @@ export function update(nodes, links) {
   edges = edgeGroups.merge(edges);
 
   edges.select("line")
-    .style("stroke", d => PROB_COLOR_SCALE(d.probability_inc_overrides));
+    .style("stroke", d => PROB_COLOR_SCALE(d.probability_inc_overrides))
+    .style("stroke-width", d => d.probability_inc_overrides === 0.0 ? "1px" : null);
 
   edges.select("text")
     .text(d => d.probability_inc_overrides.toFixed(2))
-    .style("fill", d => PROB_COLOR_SCALE(d.probability_inc_overrides));
+    .style("fill", d => PROB_COLOR_SCALE(d.probability_inc_overrides))
+    .style("display", d => d.probability_inc_overrides === 1.0 || d.probability_inc_overrides === 0.0 ? "none" : null);
 
   // === VERTICES ===
   vertices = vertices.data(nodes, d => d.id);
@@ -101,7 +103,7 @@ export function update(nodes, links) {
   vertices = enterVertices.merge(vertices);
 
   vertices.select("circle")
-    .style("fill", d => d.colorIndex === null ? 'grey' : COLORS[d.colorIndex % 5]);
+    .style("fill", d => d.colorIndex === null ? 'grey' : COLORS[d.colorIndex]);
 
   vertices.selectAll("text")
     .text(d => d.label);

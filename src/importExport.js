@@ -6,14 +6,16 @@ export function getGraphData(model_obj) {
     manual_override: node.manual_override
   }));
 
+  // Filter for non-automatic links and save BOTH the baseline and effective probabilities.
   const formattedLinks = model_obj.links
-    .filter(link => !link.automatic) // Only export non-automatic links
+    .filter(link => !link.automatic)
     .map(link => ({
       unique_id_l: link.source.label,
       manual_override_l: link.source.manual_override,
       unique_id_r: link.target.label,
       manual_override_r: link.target.manual_override,
-      match_probability: link.probability
+      match_probability: link.probability,
+      match_probability_inc_overrides: link.probability_inc_overrides
     }));
 
   return {

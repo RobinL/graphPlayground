@@ -21,8 +21,11 @@ function restart() {
   // 1 First, apply overrides and generate/remove automatic edges.
   model.generateAutomaticEdges();              // <- must run FIRST
 
-  // 2 Now every link has a final `probability_inc_overrides`, hand it to the force engine
-  simulation.update(model.nodes, model.links); // <- then run the sim
+  // 2 Hand *only* the active links to the force engine
+  const activeLinks = model.links.filter(
+    l => l.probability_inc_overrides > 0
+  );
+  simulation.update(model.nodes, activeLinks);
 
   // Tell the renderer to redraw everything
   renderer.update(model.nodes, model.links);

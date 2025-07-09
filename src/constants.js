@@ -1,6 +1,7 @@
 // Tunable constants & colour palettes
 
-export const COLORS = d3.schemeCategory10.slice(1, 6);  // Get the first 5 colors from schemeCategory10
+export const NUM_COLORS = 3; // The number of colors to cycle through
+export const COLORS = d3.schemeCategory10.slice(1, 1 + NUM_COLORS);
 
 const viewWid = document.documentElement.clientWidth;
 export const W = viewWid > 1200 ? 900 : 700;
@@ -14,8 +15,8 @@ export const PROB_COLOR_SCALE = d3.scaleLinear()
 
 // Force simulation constants
 export const FORCES = {
-  CHARGE_STRENGTH: -300,
+  CHARGE_STRENGTH: -500,
   CHARGE_MAX_DISTANCE: W / 2,
-  LINK_DISTANCE: d => d.probability_inc_overrides === 0 ? 150 : 60,
+  LINK_DISTANCE: d => d.probability_inc_overrides === 0 ? 350 : 60,
   LINK_STRENGTH: d => d.probability_inc_overrides === 0 ? 0 : 1
 };
