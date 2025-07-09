@@ -1,13 +1,11 @@
 import * as model from './model.js';
 
 export function getGraphData(model_obj) {
-  // Format nodes
   const formattedNodes = model_obj.nodes.map(node => ({
     unique_id: node.label,
     manual_override: node.manual_override
   }));
 
-  // Format links
   const formattedLinks = model_obj.links.map(link => ({
     unique_id_l: link.source.label,
     manual_override_l: link.source.manual_override,

@@ -34,7 +34,7 @@ export function removeNode(nodeToRemove) {
     nodes.splice(index, 1);
     // Filter out links connected to the removed node
     const linksToKeep = links.filter(l => l.source !== nodeToRemove && l.target !== nodeToRemove);
-    links.length = 0; // Clear the original array
+    links.length = 0;
     links.push(...linksToKeep); // Add the filtered links back
   }
 }
@@ -84,8 +84,8 @@ export function generateAutomaticEdges() {
     }
   }
   // Update the global links array with the new set of links
-  links.length = 0; // Clear the existing array
-  links.push(...currentLinks); // Add all elements from currentLinks
+  links.length = 0;
+  links.push(...currentLinks);
 }
 
 export function addLink(sourceNode, targetNode) {
@@ -93,7 +93,7 @@ export function addLink(sourceNode, targetNode) {
   for (let i = 0; i < links.length; i++) {
     const l = links[i];
     if ((l.source === sourceNode && l.target === targetNode) || (l.source === targetNode && l.target === sourceNode)) {
-      return; // Do nothing if link exists
+      return;
     }
   }
   links.push({ source: sourceNode, target: targetNode, probability: 0.5 });

@@ -5,7 +5,7 @@ let mouseupNode = null;
 let dragLine;
 
 let isDraggingProb = false;
-let sim; // <-- keep a reference to the force simulation
+let sim; // Reference to the force simulation
 let dragStartY;
 let dragStartProb;
 
@@ -17,10 +17,10 @@ let d3_global;
 export function init(d3_obj, svgElement, dragLineElement, dataModel, restartFn, simulation_obj) {
   d3_global = d3_obj;
   svg = svgElement;
-  dragLine = dragLineElement; // Assign the passed-in element
+  dragLine = dragLineElement;
   model = dataModel;
   restartCallback = restartFn;
-  sim = simulation_obj; // <-- save it for pausing/resuming
+  sim = simulation_obj; // Store for pausing/resuming
 
   svg.on("mousedown", () => {
     if (d3_global.event.button === 0) {
@@ -81,7 +81,7 @@ function hideDragLine() {
     // still create the link.
     const [mx, my] = d3_global.mouse(svg.node());
     const hit = model.nodes.find(
-      n => Math.hypot(n.x - mx, n.y - my) < 12 /*RAD + fudge*/);
+      n => Math.hypot(n.x - mx, n.y - my) < 12);
     if (hit && hit !== mousedownNode) {
       model.addLink(mousedownNode, hit);
       restartCallback();
@@ -96,7 +96,6 @@ export function beginDragLine(d) {
   d3_global.event.stopPropagation();
   d3_global.event.preventDefault();
   if (d3_global.event.ctrlKey || d3_global.event.button !== 0) return;
-  // --- NEW: freeze physics so nodes can’t run away -------------
   sim.alphaTarget(0).stop();
   mousedownNode = d;
   dragLine.classed("hidden", false)

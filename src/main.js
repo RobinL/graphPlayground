@@ -11,15 +11,12 @@ import * as importExport from './importExport.js';
 
 
 
-//update positions of edges and vertices with each internal timer's tick
 function tick() {
   renderer.updatePositions();
 }
 
 
 
-//updates the graph by updating links, nodes and binding them with DOM
-//interface is defined through several events
 function restart() {
   // 1 First finish constructing the final link array
   model.generateAutomaticEdges();              // <- must run FIRST
@@ -29,7 +26,7 @@ function restart() {
 
   // Tell the renderer to redraw everything
   renderer.update(model.nodes, model.links);
-  ui.updateTextarea(); // Call ui.updateTextarea here
+  ui.updateTextarea();
 }
 
 // Event callbacks for the renderer

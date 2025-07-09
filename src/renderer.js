@@ -23,7 +23,6 @@ export function init(selector, eventCallbacks) {
   edges = svg.append("g").selectAll(".edge");
   vertices = svg.append("g").selectAll(".vertex");
 
-  // ADD THIS
   dragLine = svg.append("path")
     .attr("class", "dragLine hidden")
     .attr("d", "M0,0L0,0");
@@ -36,7 +35,6 @@ export function init(selector, eventCallbacks) {
   onEdgeContextMenu = eventCallbacks.onEdgeContextMenu;
   onEdgeMouseDown = eventCallbacks.onEdgeMouseDown;
 
-  // CHANGE THE RETURN VALUE
   return { svg, dragLine };
 }
 
