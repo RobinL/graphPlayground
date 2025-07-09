@@ -174,10 +174,14 @@ function keydown() {
       .on("end", function (d) {
         console.log('drag ended for node:', d);
         if (!d3_global.event.active) sim.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
-        // Remove dragging class
-        d3_global.select(this.parentNode).classed("dragging", false);
+        // Keep the node fixed at its dragged position - don't clear fx/fy
+        // d.fx = null;  // <- commented out to keep position fixed
+        // d.fy = null;  // <- commented out to keep position fixed
+        console.log('Node', d.label, 'position fixed at:', d.fx, d.fy);
+        // Remove dragging class and add fixed class
+        const vertexGroup = d3_global.select(this.parentNode);
+        vertexGroup.classed("dragging", false);
+        vertexGroup.classed("fixed", true);
       }));
   }
 }

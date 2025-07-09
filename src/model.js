@@ -7,12 +7,12 @@ export let nodes = [
   { id: 2, label: "3", colorIndex: null, manual_override: null },
 ];
 export let links = [
-  { source: 0, target: 2, probability: 0.9, probability_inc_overrides: 0.9, automatic: false },
-  { source: 0, target: 1, probability: 0.9, probability_inc_overrides: 0.9, automatic: false },
-  { source: 1, target: 2, probability: 0.9, probability_inc_overrides: 0.9, automatic: false },
+  { source: 0, target: 2, probability: 0.5, probability_inc_overrides: 0.5, automatic: false },
+  { source: 0, target: 1, probability: 0.5, probability_inc_overrides: 0.5, automatic: false },
+  { source: 1, target: 2, probability: 0.5, probability_inc_overrides: 0.5, automatic: false },
 ];
 
-let lastNodeId = nodes.length;
+let lastNodeId = nodes.reduce((maxId, node) => Math.max(node.id, maxId), -1);
 
 // Functions to manipulate the model
 export function addNode(coords) {
@@ -75,7 +75,7 @@ export function generateAutomaticEdges() {
           link.probability_inc_overrides = overrideProb;
           link.automatic = true;
         }
-      } else if (overrideProb !== null && overrideProb > 0) { // Only add links for prob > 0
+      } else if (overrideProb !== null) {
         // -- (b) no link yet but override demands one
         toAdd.push({
           source: n1,
@@ -121,7 +121,10 @@ export function removeLink(linkToRemove) {
 export function clearGraph() {
   nodes.length = 0;
   links.length = 0;
-  lastNodeId = 0;
+  lastNodeId = -1;
+}
+export function setLastNodeId(id) {
+  lastNodeId = id;
 }
 
 // Normalize initial links to ensure they reference node objects and have the correct fields

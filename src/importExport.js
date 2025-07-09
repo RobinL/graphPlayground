@@ -28,15 +28,6 @@ export function generatePythonCode(model_obj) {
   const graphData = getGraphData(model_obj);
 
   // Output as pure JSON that can be loaded with json.loads
-  return `import pandas as pd
-import json
+  return JSON.stringify(graphData, null, 2)
 
-# Load the graph data
-graph_data = json.loads('''
-${JSON.stringify(graphData, null, 2)}
-''')
-
-nodes_df = pd.DataFrame(graph_data["nodes"])
-links_df = pd.DataFrame(graph_data["links"])
-`;
 }

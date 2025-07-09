@@ -106,7 +106,7 @@ export function init(d3_obj, model_obj, restartFn) {
           }
         });
 
-        _model.lastNodeId = _model.nodes.length;
+        _model.setLastNodeId(_model.nodes.length - 1);
         restartCallback();
 
         details.node().open = false;

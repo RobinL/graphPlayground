@@ -9,8 +9,9 @@ let onNodeMouseDown = () => { };
 let onNodeMouseUp = () => { };
 let onEdgeContextMenu = () => { };
 let onEdgeMouseDown = () => { };
+let restartCallback = () => { };
 
-export function init(selector, eventCallbacks) {
+export function init(selector, eventCallbacks, restartFn) {
   // Set up the main SVG
   svg = d3.select(selector)
     .append("svg")
@@ -34,6 +35,7 @@ export function init(selector, eventCallbacks) {
   onNodeMouseUp = eventCallbacks.onNodeMouseUp;
   onEdgeContextMenu = eventCallbacks.onEdgeContextMenu;
   onEdgeMouseDown = eventCallbacks.onEdgeMouseDown;
+  restartCallback = restartFn || (() => { });
 
   return { svg, dragLine };
 }
@@ -84,7 +86,20 @@ export function update(nodes, links) {
     .on("mousedown", onNodeMouseDown)
     .on("mouseup", onNodeMouseUp)
     .on("contextmenu", onNodeContextMenu)
-    .on("click", onNodeClick);
+    .on("click", onNodeClick)
+    .on("dblclick", function (d) {
+      // Double-click to unfix a manually positioned node
+      if (d.fx !== null && d.fy !== null) {
+        d.fx = null;
+        d.fy = null;
+        d3.select(this.parentNode).classed("fixed", false);
+        console.log('Node', d.label, 'unfixed - returned to simulation');
+        // Restart simulation to let the node move freely
+        if (typeof restartCallback === 'function') {
+          restartCallback();
+        }
+      }
+    });
 
   // Add text layers for outline effect
   enterVertices.append("text")
@@ -107,6 +122,9 @@ export function update(nodes, links) {
 
   vertices.selectAll("text")
     .text(d => d.label);
+
+  // Add visual indicator for manually positioned (fixed) nodes
+  vertices.classed("fixed", d => d.fx !== null && d.fy !== null);
 }
 
 // Function to update element positions during simulation ticks
