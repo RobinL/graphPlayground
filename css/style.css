@@ -123,3 +123,45 @@ svg {
   cursor: move !important;
 }
 
+/* Table styling for node and edge tables */
+#table-container {
+  width: 900px;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+}
+
+#table-container h2 {
+  font-size: 20px;
+  font-weight: normal;
+  color: #333;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+}
+
+th, td {
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:nth-child(odd) {
+  background-color: white;
+}
+

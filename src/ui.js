@@ -1,3 +1,61 @@
+// Table rendering for nodes and edges
+export function updateTables() {
+  const graphData = importExport.getGraphData(_model);
+
+  // --- Node Table ---
+  const nodeTable = d3_global.select("#node-table-wrap").html("").append("table");
+  const nodeHeaders = ["unique_id", "manual_override"];
+
+  nodeTable.append("thead").append("tr")
+    .selectAll("th")
+    .data(nodeHeaders)
+    .enter().append("th")
+    .text(d => d);
+
+  const nodeRows = nodeTable.append("tbody")
+    .selectAll("tr")
+    .data(graphData.nodes, d => d.unique_id);
+
+  const nodeRowsEnter = nodeRows.enter().append("tr");
+
+  nodeHeaders.forEach(header => {
+    nodeRowsEnter.append("td")
+      .text(d => d[header] === null ? "None" : d[header]);
+  });
+
+  nodeRows.exit().remove();
+
+  // --- Edge Table ---
+  const edgeTable = d3_global.select("#edge-table-wrap").html("").append("table");
+  const edgeHeaders = [
+    "unique_id_l", "manual_override_l", "unique_id_r", "manual_override_r",
+    "match_probability", "match_probability_inc_overrides"
+  ];
+
+  edgeTable.append("thead").append("tr")
+    .selectAll("th")
+    .data(edgeHeaders)
+    .enter().append("th")
+    .text(d => d);
+
+  const edgeRows = edgeTable.append("tbody")
+    .selectAll("tr")
+    .data(graphData.links, d => `${d.unique_id_l}-${d.unique_id_r}`);
+
+  const edgeRowsEnter = edgeRows.enter().append("tr");
+
+  edgeHeaders.forEach(header => {
+    edgeRowsEnter.append("td")
+      .text(d => {
+        const val = d[header];
+        if (val === null) return "None";
+        if (typeof val === 'number') return val.toFixed(2);
+        return val;
+      });
+  });
+
+  edgeRows.exit().remove();
+}
 import * as importExport from './importExport.js';
 import { W, H } from './constants.js'; // Import W and H
 
@@ -145,9 +203,13 @@ export function init(d3_obj, model_obj, restartFn) {
     .style("width", "100%")
     .style("margin-top", "30px");
 
+  updateTables(); // <-- ADD THIS LINE
   updateTextarea();
 }
 
 export function updateTextarea() {
-  textarea.text(importExport.generatePythonCode(_model));
+  // Update both the textarea and the tables whenever data changes.
+  const code = importExport.generatePythonCode(_model);
+  textarea.text(code);
+  updateTables();
 }
