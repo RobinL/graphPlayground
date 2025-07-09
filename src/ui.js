@@ -28,7 +28,7 @@ export function updateTables() {
   // --- Edge Table ---
   const edgeTable = d3_global.select("#edge-table-wrap").html("").append("table");
   const edgeHeaders = [
-    "unique_id_l", "manual_override_l", "unique_id_r", "manual_override_r",
+    "unique_id_l", "unique_id_r",
     "match_probability", "match_probability_inc_overrides"
   ];
 

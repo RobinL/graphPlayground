@@ -16,10 +16,10 @@ let lastNodeId = nodes.reduce((maxId, node) => Math.max(node.id, maxId), -1);
 
 // Functions to manipulate the model
 export function addNode(coords) {
-  const label = (lastNodeId + 1).toString();
+  const newId = ++lastNodeId;
   const newNode = {
-    id: ++lastNodeId,
-    label: label,
+    id: newId,
+    label: (newId + 1).toString(),
     colorIndex: null,
     manual_override: null,
     x: coords[0],
