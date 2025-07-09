@@ -16,7 +16,8 @@ export function updateTables() {
     .selectAll("tr")
     .data(graphData.nodes, d => d.unique_id);
 
-  const nodeRowsEnter = nodeRows.enter().append("tr");
+  const nodeRowsEnter = nodeRows.enter().append("tr")
+    .classed("manual-override", d => d.manual_override !== null);
 
   nodeHeaders.forEach(header => {
     nodeRowsEnter.append("td")
@@ -42,7 +43,8 @@ export function updateTables() {
     .selectAll("tr")
     .data(graphData.links, d => `${d.unique_id_l}-${d.unique_id_r}`);
 
-  const edgeRowsEnter = edgeRows.enter().append("tr");
+  const edgeRowsEnter = edgeRows.enter().append("tr")
+    .classed("manual-override", d => d.match_probability_inc_overrides === 1.00 || d.match_probability_inc_overrides === 0.00);
 
   edgeHeaders.forEach(header => {
     edgeRowsEnter.append("td")
