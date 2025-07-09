@@ -21,11 +21,11 @@ function tick() {
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
 function restart() {
-  // Update the simulation with the new data
-  simulation.update(model.nodes, model.links);
+  // 1 First finish constructing the final link array
+  model.generateAutomaticEdges();              // <- must run FIRST
 
-  // (We'll move this later, but for now it stays)
-  model.generateAutomaticEdges();
+  // 2 Now every link has proper objects, hand it to the force engine
+  simulation.update(model.nodes, model.links); // <- then run the sim
 
   // Tell the renderer to redraw everything
   renderer.update(model.nodes, model.links);

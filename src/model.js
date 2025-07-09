@@ -111,3 +111,11 @@ export function clearGraph() {
   links.length = 0;
   lastNodeId = 0;
 }
+
+// Normalize initial links to ensure they reference node objects, not just IDs
+(function normaliseInitialLinks() {
+  links.forEach(l => {
+    if (typeof l.source === 'number') l.source = nodes[l.source];
+    if (typeof l.target === 'number') l.target = nodes[l.target];
+  });
+})();
