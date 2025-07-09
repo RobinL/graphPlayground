@@ -117,3 +117,8 @@ svg {
   -ms-user-select: none;
   user-select: none;
 }
+
+.vertex-group.dragging,
+.vertex-group.dragging * {
+  cursor: move !important;
+}

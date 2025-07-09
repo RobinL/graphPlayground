@@ -14,6 +14,8 @@ let model;
 let restartCallback;
 let d3_global;
 
+let isMetaKeyDown = false;
+
 export function init(d3_obj, svgElement, dragLineElement, dataModel, restartFn, simulation_obj) {
   d3_global = d3_obj;
   svg = svgElement;
@@ -102,9 +104,20 @@ function hideDragLine() {
 }
 
 export function beginDragLine(d) {
+  console.log('beginDragLine called', {
+    metaKey: d3_global.event.metaKey,
+    button: d3_global.event.button,
+    isMetaKeyDown: isMetaKeyDown
+  });
+
+  // If Meta key is held, this should be handled by the drag behavior instead
+  if (isMetaKeyDown || d3_global.event.metaKey || d3_global.event.button !== 0) {
+    console.log('beginDragLine: aborting due to metaKey or wrong button');
+    return;
+  }
+
   d3_global.event.stopPropagation();
   d3_global.event.preventDefault();
-  if (d3_global.event.ctrlKey || d3_global.event.button !== 0) return;
   sim.alphaTarget(0).stop();
   mousedownNode = d;
   dragLine.classed("hidden", false)
@@ -138,28 +151,51 @@ function resumeSimulation() {
 }
 
 function keydown() {
+  console.log('keydown event:', d3_global.event.key);
   if (d3_global.event.key === "Meta") {
-    d3_global.selectAll(".vertex-group").call(d3_global.drag()
+    console.log('Meta key pressed - setting up drag behavior');
+    isMetaKeyDown = true;
+
+    // Apply drag behavior to the circles
+    d3_global.selectAll(".vertex-group circle").call(d3_global.drag()
       .on("start", function dragstarted(d) {
+        console.log('drag started for node:', d);
         if (!d3_global.event.active) sim.alphaTarget(1).restart();
         d.fx = d.x;
         d.fy = d.y;
+        // Add dragging class for visual feedback
+        d3_global.select(this.parentNode).classed("dragging", true);
       })
       .on("drag", function (d) {
+        console.log('dragging node:', d, 'to:', d3_global.event.x, d3_global.event.y);
         d.fx = d3_global.event.x;
         d.fy = d3_global.event.y;
       })
       .on("end", function (d) {
+        console.log('drag ended for node:', d);
         if (!d3_global.event.active) sim.alphaTarget(0);
         d.fx = null;
         d.fy = null;
+        // Remove dragging class
+        d3_global.select(this.parentNode).classed("dragging", false);
       }));
   }
 }
 
 export function keyup() {
+  console.log('keyup event:', d3_global.event.key);
   if (d3_global.event.key === "Meta") {
-    d3_global.selectAll(".vertex-group circle").on("mousedown.drag", null);
+    console.log('Meta key released - removing drag behavior');
+    isMetaKeyDown = false;
+
+    // Remove drag handlers
+    d3_global.selectAll(".vertex-group circle").on(".drag", null);
+
+    // Remove any dragging classes
+    d3_global.selectAll(".vertex-group").classed("dragging", false);
+
+    // Resume normal force behaviour
+    sim.alphaTarget(0);
   }
 }
 
