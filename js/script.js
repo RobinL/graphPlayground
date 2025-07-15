@@ -111,6 +111,46 @@ function getDisplayLabel(d) {
   return showSourceDataset ? datasetLabel + nodeLabel : nodeLabel;
 }
 
+function updateNodeLabelsInSVG() {
+  vertices.selectAll("text")
+    .text(getDisplayLabel);
+}
+
+function updateNodeEditor() {
+  const nodeList = d3.select("#node-list");
+
+  // Data join
+  const nodeItems = nodeList.selectAll(".node-editor-item")
+    .data(nodes, d => d.id);
+
+  // EXIT: Remove old items
+  nodeItems.exit().remove();
+
+  // ENTER: Create new items for new nodes
+  const enterItems = nodeItems.enter()
+    .append("div")
+    .attr("class", "node-editor-item");
+
+  enterItems.append("span");
+
+  enterItems.append("input")
+    .attr("type", "text")
+    .on('input', function (d) {
+      // When user types in the input box...
+      d.label = this.value;     // 1. Update the underlying data
+      updateNodeLabelsInSVG();  // 2. Redraw the labels in the SVG
+    });
+
+  // UPDATE: Update existing items
+  const mergedItems = enterItems.merge(nodeItems);
+
+  mergedItems.select("span")
+    .text(d => `ID ${d.id}:`);
+
+  mergedItems.select("input")
+    .property("value", d => d.label);
+}
+
 //updates the graph by updating links, nodes and binding them with DOM
 //interface is defined through several events
 function restart() {
@@ -202,12 +242,14 @@ function restart() {
   vertices = enterVertices.merge(vertices);
 
   // Update all vertex labels
-  vertices.selectAll("text")
-    .text(getDisplayLabel);
+  updateNodeLabelsInSVG();
 
   simulation.nodes(nodes);
   simulation.force("link").links(links);
   simulation.alpha(0.8).restart();
+
+  // Add this line at the end:
+  updateNodeEditor();
 }
 
 
