@@ -33,7 +33,6 @@ var isDraggingProb = false;
 var dragStartY;
 var dragStartProb;
 var showSourceDataset = false;
-var nodesAreNumbered = true;
 
 // Add this color scale near the top with other variables
 var probColorScale = d3.scaleLinear()
@@ -107,16 +106,8 @@ function tick() {
 
 
 function getDisplayLabel(d) {
-  let nodeLabel, datasetLabel;
-
-  if (nodesAreNumbered) {
-    nodeLabel = d.label;
-    datasetLabel = d.sourceDataset;
-  } else {
-    nodeLabel = String.fromCharCode(96 + parseInt(d.label));
-    datasetLabel = (d.sourceDataset.charCodeAt(0) - 96).toString();
-  }
-
+  const nodeLabel = d.label;
+  const datasetLabel = d.sourceDataset;
   return showSourceDataset ? datasetLabel + nodeLabel : nodeLabel;
 }
 
@@ -377,13 +368,6 @@ d3.select("#toggle-labels")
   .on("click", function () {
     showSourceDataset = !showSourceDataset;
     this.textContent = showSourceDataset ? "Hide Source Dataset" : "Show Source Dataset";
-    restart();
-  });
-
-d3.select("#toggle-numbering")
-  .on("click", function() {
-    nodesAreNumbered = !nodesAreNumbered;
-    this.textContent = nodesAreNumbered ? "Swap Numbering (Nodes: 1,2,3)" : "Swap Numbering (Nodes: A,B,C)";
     restart();
   });
 
