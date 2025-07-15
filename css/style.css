@@ -117,3 +117,38 @@ svg {
   -ms-user-select: none;
   user-select: none;
 }
+
+/* Node label editor styles */
+#node-editor {
+  width: 700px;
+  margin: 20px auto;
+  padding: 10px;
+  border: 1px solid #eee;
+  text-align: left;
+}
+
+#node-editor h3 {
+  text-align: center;
+  margin-top: 0;
+  font-weight: 300;
+}
+
+.node-editor-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.node-editor-item span {
+  font-family: monospace;
+  font-size: 14px;
+  min-width: 100px; /* Aligns the input fields */
+}
+
+.node-editor-item input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  flex-grow: 1;
+}
