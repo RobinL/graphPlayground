@@ -18,7 +18,7 @@ var links = [
 var lastNodeId = nodes.length
 var viewWid = document.documentElement.clientWidth;
 var w = viewWid > 1200 ? 900 : 700;
-var h = w == 900 ? 600 : 500;
+var h = 400;  // Fixed height of 600px
 var rad = 10;
 
 document.getElementById("container").style.width = "" + w + "px";
@@ -269,7 +269,7 @@ svg.on("mousedown", addNode)
     if (isDraggingProb) {
       let dy = d3.event.y - dragStartY;
       // Increase sensitivity and precision
-      let probChange = -dy * 0.001;  // Reduced from 0.005 to 0.001 for finer control
+      let probChange = -dy * 0.005;  // Reduced from 0.005 to 0.001 for finer control
 
       edges.selectAll("line.active").each(function (d) {
         // Update probability, keeping it between 0 and 1
@@ -517,17 +517,7 @@ function generatePythonCode() {
   };
 
   // Output as pure JSON that can be loaded with json.loads
-  return `import pandas as pd
-import json
-
-# Load the graph data
-graph_data = json.loads('''
-${JSON.stringify(graphData, null, 2)}
-''')
-
-nodes_df = pd.DataFrame(graph_data["nodes"])
-links_df = pd.DataFrame(graph_data["links"])
-`;
+  return JSON.stringify(graphData, null, 2)
 }
 
 // Remove the old button and add textarea + copy button
